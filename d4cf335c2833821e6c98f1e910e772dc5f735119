@@ -90,6 +90,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "6b9348dc_91c446fb",
+        "filename": "test/decode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "\u003e Done.\n\nNote these are independent file level comments. In the gerrit UI the comments can be replied to directly or resolved by hitting the \u0027Done\u0027 button, but don\u0027t forget to publish the drafts.",
+      "parentUuid": "ba6829df_dd21613a",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "8d4fce37_c65230d5",
@@ -103,6 +121,24 @@
       "writtenOn": "2026-08-25T18:21:02Z",
       "side": 1,
       "message": "Better to use 16383 here and line 96 for readability.",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "845f0151_0e050035",
+        "filename": "test/decode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d4fce37_c65230d5",
       "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
@@ -124,6 +160,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "cfc57a97_c9dd93ac",
+        "filename": "test/decode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b505778_33534ff1",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "0a79fde6_5ee3a166",
@@ -141,6 +195,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c0d3b153_dec9e832",
+        "filename": "test/decode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0a79fde6_5ee3a166",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "93136316_29bf9c18",
@@ -154,6 +226,24 @@
       "writtenOn": "2026-08-25T18:21:02Z",
       "side": 1,
       "message": "`static constexpr kInterframe...`",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "09b0b900_62e156d7",
+        "filename": "test/decode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93136316_29bf9c18",
       "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
@@ -189,6 +279,24 @@
       "writtenOn": "2026-08-25T18:21:02Z",
       "side": 1,
       "message": "Check `ctx-\u003esi.is_kf` here too so that we know `ctx-\u003esi.w` and `ctx-\u003esi.h` have been correctly set.",
+      "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "918688a2_0dbcce54",
+        "filename": "vp8/vp8_dx_iface.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-08-26T19:05:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c9421d3f_0d2533de",
       "revId": "d4cf335c2833821e6c98f1e910e772dc5f735119",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
