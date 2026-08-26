@@ -16,6 +16,24 @@
       "message": "This should be moved into the `CONFIG_VP8_ENCODER` block.",
       "revId": "2b4938713778e4839fc77140b7becf8683d60e56",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6d19c7e_25e09417",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 3366,
+      "author": {
+        "id": 1126910
+      },
+      "writtenOn": "2026-08-26T21:29:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d5387a24_82709a5c",
+      "revId": "2b4938713778e4839fc77140b7becf8683d60e56",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
