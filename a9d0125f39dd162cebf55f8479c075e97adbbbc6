@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "40436acd_4b92202c",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1234564
+      },
+      "writtenOn": "2026-08-27T11:11:46Z",
+      "side": 1,
+      "message": "can you please take a look? Basically https://chromium-review.googlesource.com/c/webm/libvpx/+/73431 backported for VP8.\n\n(webrtc sets kDenoiserOnYOnly for mobile arm so keeping that)",
+      "revId": "a9d0125f39dd162cebf55f8479c075e97adbbbc6",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
