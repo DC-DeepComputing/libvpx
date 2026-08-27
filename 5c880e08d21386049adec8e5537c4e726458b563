@@ -16,6 +16,24 @@
       "message": "Thanks for the fix!",
       "revId": "5c880e08d21386049adec8e5537c4e726458b563",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b0b70dd8_41761ff8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1234564
+      },
+      "writtenOn": "2026-08-27T18:35:41Z",
+      "side": 1,
+      "message": "I had fun with https://github.com/microsoft/VCD which should really be what we use instead of \"vidyo1\" this decade!\n\nIt did help that VP9 already did \"the right thing\". I do wonder about the kDenoiserOnYOnly in particular since WebRTC decided to set that on ARM in 2014 but lets make that a question for sprang@ ;-)",
+      "parentUuid": "a9914cd6_6b06b01d",
+      "revId": "5c880e08d21386049adec8e5537c4e726458b563",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
