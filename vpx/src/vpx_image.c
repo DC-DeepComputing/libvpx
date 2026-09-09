@@ -220,12 +220,18 @@ int vpx_img_set_rect(vpx_image_t *img, unsigned int x, unsigned int y,
                      unsigned int w, unsigned int h) {
   if (x <= UINT_MAX - w && x + w <= img->w && y <= UINT_MAX - h &&
       y + h <= img->h) {
+    img->d_w = w;
+    img->d_h = h;
+
+    /* Empty rectangles contain no addressable samples. Keep the existing
+     * plane pointers so boundary coordinates cannot create pointers outside
+     * the allocation.
+     */
+    if (w == 0 || h == 0) return 0;
+
     const int flipped = img->stride[VPX_PLANE_Y] < 0;
     /* Plane offsets are calculated from the unflipped allocation base. */
     if (flipped) negate_strides(img);
-
-    img->d_w = w;
-    img->d_h = h;
 
     /* Calculate plane pointers */
     if (!(img->fmt & VPX_IMG_FMT_PLANAR)) {
@@ -268,20 +274,18 @@ int vpx_img_set_rect(vpx_image_t *img, unsigned int x, unsigned int y,
             data + uv_x * bytes_per_sample + uv_y * img->stride[VPX_PLANE_U];
       }
     }
-    if (flipped) {
-      if (h == 0) {
-        /* An empty image has no last row for vpx_img_flip() to select. */
-        negate_strides(img);
-      } else {
-        vpx_img_flip(img);
-      }
-    }
+    if (flipped) vpx_img_flip(img);
     return 0;
   }
   return -1;
 }
 
 void vpx_img_flip(vpx_image_t *img) {
+  if (img->d_w == 0 || img->d_h == 0) {
+    negate_strides(img);
+    return;
+  }
+
   const unsigned int chroma_height =
       (img->d_h + img->y_chroma_shift) >> img->y_chroma_shift;
 
