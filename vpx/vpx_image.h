@@ -218,7 +218,9 @@ vpx_image_t *vpx_img_wrap(vpx_image_t *img, vpx_img_fmt_t fmt, unsigned int d_w,
  *
  * Updates the displayed rectangle (aka viewport) on the image surface to
  * match the specified coordinates and size. Specifically, sets img->d_w,
- * img->d_h, and elements of the img->planes[] array.
+ * img->d_h, and elements of the img->planes[] array. If either dimension is
+ * zero, the rectangle has no addressable samples and the existing plane
+ * pointers are left unchanged.
  *
  * \param[in]    img       Image descriptor
  * \param[in]    x         leftmost column
