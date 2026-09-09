@@ -236,6 +236,62 @@ TEST(VpxImageTest, VpxImgFlipOneRow) {
   vpx_img_free(img);
 }
 
+TEST(VpxImageTest, VpxImgEmptyRect) {
+  static constexpr vpx_img_fmt_t kFormats[] = {
+    VPX_IMG_FMT_YV12,   VPX_IMG_FMT_I420,   VPX_IMG_FMT_I422,
+    VPX_IMG_FMT_I444,   VPX_IMG_FMT_I440,   VPX_IMG_FMT_NV12,
+    VPX_IMG_FMT_I42016, VPX_IMG_FMT_I42216, VPX_IMG_FMT_I44416,
+    VPX_IMG_FMT_I44016,
+  };
+  struct EmptyRect {
+    unsigned int x;
+    unsigned int y;
+    unsigned int w;
+    unsigned int h;
+  };
+  static constexpr EmptyRect kRects[] = {
+    { 16, 5, 0, 0 },
+    { 16, 0, 0, 5 },
+    { 0, 5, 16, 0 },
+  };
+
+  for (const vpx_img_fmt_t format : kFormats) {
+    for (const EmptyRect &rect : kRects) {
+      vpx_image_t *img = vpx_img_alloc(nullptr, format, 16, 5, 1);
+      ASSERT_NE(img, nullptr);
+
+      unsigned char *planes[3];
+      int strides[3];
+      for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
+        planes[plane] = img->planes[plane];
+        strides[plane] = img->stride[plane];
+      }
+
+      ASSERT_EQ(vpx_img_set_rect(img, rect.x, rect.y, rect.w, rect.h), 0);
+      EXPECT_EQ(img->d_w, rect.w);
+      EXPECT_EQ(img->d_h, rect.h);
+      for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
+        EXPECT_EQ(img->planes[plane], planes[plane]);
+        EXPECT_EQ(img->stride[plane], strides[plane]);
+      }
+
+      vpx_img_flip(img);
+      for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
+        EXPECT_EQ(img->planes[plane], planes[plane]);
+        EXPECT_EQ(img->stride[plane], -strides[plane]);
+      }
+
+      vpx_img_flip(img);
+      for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
+        EXPECT_EQ(img->planes[plane], planes[plane]);
+        EXPECT_EQ(img->stride[plane], strides[plane]);
+      }
+
+      vpx_img_free(img);
+    }
+  }
+}
+
 TEST(VpxImageTest, VpxImgFlipOddHeight) {
   static constexpr vpx_img_fmt_t kFormats[] = {
     VPX_IMG_FMT_YV12, VPX_IMG_FMT_I420,   VPX_IMG_FMT_I440,
