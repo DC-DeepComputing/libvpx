@@ -220,6 +220,9 @@ vpx_image_t *vpx_img_wrap(vpx_image_t *img, vpx_img_fmt_t fmt, unsigned int d_w,
  * match the specified coordinates and size. Specifically, sets img->d_w,
  * img->d_h, and elements of the img->planes[] array.
  *
+ * \note If either dimension is zero, the rectangle has no addressable
+ * samples and the existing plane pointers are left unchanged.
+ *
  * \param[in]    img       Image descriptor
  * \param[in]    x         leftmost column
  * \param[in]    y         topmost row
