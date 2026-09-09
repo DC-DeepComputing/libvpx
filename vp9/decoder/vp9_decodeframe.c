@@ -1672,8 +1672,10 @@ static void get_tile_buffer(const uint8_t *const data_end, int is_last,
     size = data_end - *data;
   }
 
-  buf->data = *data;
+  /* Capacity before pointer so counted_by invariants hold under
+   * -fbounds-safety (VPX_COUNTED_BY_OR_NULL on TileBuffer.data). */
   buf->size = size;
+  buf->data = *data;
 
   *data += size;
 }
