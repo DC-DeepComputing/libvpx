@@ -33,6 +33,24 @@
       "message": "In discussing this with Wan-Teh, I think it may be better to revert the change in libvpx and simply fail for both cases. These structs are mainly meant to support the encoder and decoder interfaces, so unless there\u0027s a use case, we can restrict what interface supports.",
       "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2c3b36a3_12b3d6dc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1532352
+      },
+      "writtenOn": "2026-09-10T20:56:02Z",
+      "side": 1,
+      "message": "Done, as change 8393057: it reverts 01a78fbc and returns -1 from vpx_img_set_rect() when the image is flipped, with a test covering both of the cases that commit handled, a non-empty rectangle and an empty one.\n\nThe caller audit agrees with restricting it. After the revert vpx_img_flip() has no caller outside its own tests, and the only live vpx_img_set_rect() call in the tree is the whole-image one inside img_alloc_helper(), which runs before anything could flip the image. The call in vp8_cx_iface.c is inside a comment block. libaom is the same shape, where aom_img_flip() has no caller at all, so I have uploaded the matching change there as patch set 5 of 216401.\n\nThat leaves what this change was about. vpx_img_flip() on an image allocated with a zero dimension does not go through vpx_img_set_rect(), and it still offsets the planes by UINT_MAX rows because d_h - 1 is computed in unsigned int. If you would rather restrict that as well, the equivalent is vpx_img_alloc() rejecting a zero width or height, and I am happy to upload that and abandon this one. Whichever you prefer.",
+      "parentUuid": "525379b4_8d937e70",
+      "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
