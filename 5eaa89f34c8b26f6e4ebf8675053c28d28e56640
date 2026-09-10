@@ -16,6 +16,23 @@
       "message": "Patch set 5 changes the commit message only. The diff is identical to patch set 3, which passed the presubmit you linked, so that result still applies.",
       "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "525379b4_8d937e70",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-09-10T20:28:44Z",
+      "side": 1,
+      "message": "In discussing this with Wan-Teh, I think it may be better to revert the change in libvpx and simply fail for both cases. These structs are mainly meant to support the encoder and decoder interfaces, so unless there\u0027s a use case, we can restrict what interface supports.",
+      "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
