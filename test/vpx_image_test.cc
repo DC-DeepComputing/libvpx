@@ -75,51 +75,6 @@ TEST(VpxImageTest, VpxImgSetRectOverflow) {
             0);
 }
 
-TEST(VpxImageTest, VpxImgSetRectPreservesFlip) {
-  static constexpr vpx_img_fmt_t kFormats[] = {
-    VPX_IMG_FMT_YV12,   VPX_IMG_FMT_I420,   VPX_IMG_FMT_I422,
-    VPX_IMG_FMT_I444,   VPX_IMG_FMT_I440,   VPX_IMG_FMT_NV12,
-    VPX_IMG_FMT_I42016, VPX_IMG_FMT_I42216, VPX_IMG_FMT_I44416,
-    VPX_IMG_FMT_I44016,
-  };
-
-  for (const vpx_img_fmt_t format : kFormats) {
-    vpx_image_t *img = vpx_img_alloc(nullptr, format, 16, 5, 1);
-    vpx_image_t *expected = vpx_img_alloc(nullptr, format, 16, 5, 1);
-    ASSERT_NE(img, nullptr);
-    ASSERT_NE(expected, nullptr);
-
-    ASSERT_EQ(vpx_img_set_rect(expected, 2, 1, 8, 3), 0);
-    vpx_img_flip(expected);
-
-    vpx_img_flip(img);
-    ASSERT_EQ(vpx_img_set_rect(img, 2, 1, 8, 3), 0);
-
-    for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
-      EXPECT_EQ(img->planes[plane] - img->img_data,
-                expected->planes[plane] - expected->img_data);
-      EXPECT_EQ(img->stride[plane], expected->stride[plane]);
-    }
-
-    ASSERT_EQ(vpx_img_set_rect(img, 0, 0, 16, 0), 0);
-    EXPECT_LT(img->stride[VPX_PLANE_Y], 0);
-    ASSERT_EQ(vpx_img_set_rect(img, 0, 0, 16, 5), 0);
-
-    vpx_img_flip(expected);
-    ASSERT_EQ(vpx_img_set_rect(expected, 0, 0, 16, 5), 0);
-    vpx_img_flip(expected);
-
-    for (int plane = VPX_PLANE_Y; plane <= VPX_PLANE_V; ++plane) {
-      EXPECT_EQ(img->planes[plane] - img->img_data,
-                expected->planes[plane] - expected->img_data);
-      EXPECT_EQ(img->stride[plane], expected->stride[plane]);
-    }
-
-    vpx_img_free(expected);
-    vpx_img_free(img);
-  }
-}
-
 TEST(VpxImageTest, VpxImgAllocNone) {
   const int kWidth = 128;
   const int kHeight = 128;
@@ -196,6 +151,30 @@ TEST(VpxImageTest, VpxImgAllocHugeWidth) {
     y_plane[image->d_w - 1] = 0;
     vpx_img_free(image);
   }
+}
+
+TEST(VpxImageTest, VpxImgSetRectRejectsFlippedImage) {
+  vpx_image_t *img = vpx_img_alloc(nullptr, VPX_IMG_FMT_I420, 16, 16, 1);
+  ASSERT_NE(img, nullptr);
+  vpx_img_flip(img);
+  unsigned char *const y_plane = img->planes[VPX_PLANE_Y];
+  unsigned char *const u_plane = img->planes[VPX_PLANE_U];
+  unsigned char *const v_plane = img->planes[VPX_PLANE_V];
+  const int y_stride = img->stride[VPX_PLANE_Y];
+  const unsigned int d_w = img->d_w;
+  const unsigned int d_h = img->d_h;
+
+  EXPECT_EQ(vpx_img_set_rect(img, 0, 0, 8, 8), -1);
+  EXPECT_EQ(vpx_img_set_rect(img, 0, 0, 0, 0), -1);
+
+  EXPECT_EQ(img->planes[VPX_PLANE_Y], y_plane);
+  EXPECT_EQ(img->planes[VPX_PLANE_U], u_plane);
+  EXPECT_EQ(img->planes[VPX_PLANE_V], v_plane);
+  EXPECT_EQ(img->stride[VPX_PLANE_Y], y_stride);
+  EXPECT_EQ(img->d_w, d_w);
+  EXPECT_EQ(img->d_h, d_h);
+
+  vpx_img_free(img);
 }
 
 TEST(VpxImageTest, VpxImgFlipNoAlpha) {
