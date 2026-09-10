@@ -1,5 +1,46 @@
 {
-  "comments": [],
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "65b5eb12_aee98f5e",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-10T20:22:20Z",
+      "side": 1,
+      "message": "Note: Please read my comment in vpx/src/vpx_image.c first.\n\nLines 67 - 71 show that this test expects the flip and set_rect operations are commutative. In general we cannot assume two operations are commutative. For example, in mathematics courses we learned that function composition is not commutative and matrix multiplication is not commutative.\n\nHere is an example from C++ coding that captures the essence of the problem. Consider the byteswap and low16 operations defined as follows:\n\nbyteswap: swaps the byte order of the input integer (32-bit or 16-bit)\n\nlow16: returns the least significant 16 bits of the input integer (32-bit).\n\nThese two operations are not commutative.\n\n```\nlow16( byteswap\u003cuint32_t\u003e(0x12345678) ) \u003d low16(0x87654321) \u003d 0x4321\n\nbyteswap\u003cuint16_t\u003e( low16(0x12345678) ) \u003d byteswap\u003cuint16_t\u003e(0x5678) \u003d 0x8765\n```",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 52
+      },
+      "revId": "01a78fbc3b25c6a9eb227973bd591e9092d6daa1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ea8eaa6a_8fe3b3b2",
+        "filename": "vpx/src/vpx_image.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-10T20:22:20Z",
+      "side": 1,
+      "message": "Darren, James, Jerome: Although the changes to `vpx_img_set_rect()` fixed the invalid plane pointers when `img` is flipped, the semantics for setting a view rect on a flipped image is incorrect or at least controversial. I will explain with an example.\n\nConsider a plane of size 2x2 with the following sample values:\n\n```\n11 12\n21 22\n```\n\nSuppose we flip the plane, and we actually move the two rows in memory. Then the plane becomes:\n\n```\n21 22\n11 12\n```\n\nNow, we set the view rect (0, 0, 1, 1) on the flipped plane to extract only the first sample of the flipped plane.  We should get:\n\n```\n21\n```\n\n---\n\nIn contrast, the current `vpx_img_set_rect()` function first sets the view rect (0, 0, 1, 1) on the orignal plane and extracts the first sample of the original plane:\n\n```\n11\n```\n\nThen it flips the view rect:\n\n```\n11\n```\n\n---\n\nI hope I have given a convincing argument that the current behavior of `vpx_img_set_rect()` is incorrect, or at least controversial.\n\nSince I found no evidence that `vpx_img_flip()` is used outside its own unit tests, it is not worth our time trying to correct `vpx_img_set_rect()`. So I suggest reverting this CL and just having `vpx_img_set_rect()` return -1 if `img` is flipped.\n\n---\n\nAnother problem with this CL is that it introduced explicit handling of a zero height, at line 260. Since there is also no evidence that `vpx_image_t` was intended to support a zero width or zero height, we should not spend time trying to handle a zero width or zero height properly. We can let a zero width or zero height be \"undefined behavior\", or treat them as invalid.",
+      "revId": "01a78fbc3b25c6a9eb227973bd591e9092d6daa1",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ],
   "submitRequirementResults": [
     {
       "submitRequirement": {
