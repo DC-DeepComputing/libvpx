@@ -220,13 +220,18 @@ vpx_image_t *vpx_img_wrap(vpx_image_t *img, vpx_img_fmt_t fmt, unsigned int d_w,
  * match the specified coordinates and size. Specifically, sets img->d_w,
  * img->d_h, and elements of the img->planes[] array.
  *
+ * The plane pointers are recomputed from img_data, the base of the allocation,
+ * which a flipped image no longer points at, so a flipped image is rejected and
+ * left unchanged. Call vpx_img_flip() again to restore the orientation first.
+ *
  * \param[in]    img       Image descriptor
  * \param[in]    x         leftmost column
  * \param[in]    y         topmost row
  * \param[in]    w         width
  * \param[in]    h         height
  *
- * \return 0 if the requested rectangle is valid, nonzero (-1) otherwise.
+ * \return 0 if the requested rectangle is valid and the image is not flipped,
+ *         nonzero (-1) otherwise. The image is unchanged on failure.
  */
 int vpx_img_set_rect(vpx_image_t *img, unsigned int x, unsigned int y,
                      unsigned int w, unsigned int h);
