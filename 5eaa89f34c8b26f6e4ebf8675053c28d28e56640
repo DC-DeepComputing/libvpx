@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b1b00a9c_53d76ced",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1532352
+      },
+      "writtenOn": "2026-09-10T00:26:23Z",
+      "side": 1,
+      "message": "Patch set 5 changes the commit message only. The diff is identical to patch set 3, which passed the presubmit you linked, so that result still applies.",
+      "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
