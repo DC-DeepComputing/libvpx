@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "29fc378c_11c215af",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T16:12:29Z",
+      "side": 1,
+      "message": "Darren: I just realized that when chroma planes are subsampled, odd `x` and `y` are problematic. Let\u0027s avoid that issue in this CL by using the following values:\n\nimage size: 4x4\n\nrects: (2, 2, 2, 2) and (0, 0, 4, 4)\n\nNote: We could use an odd width or height in the image size or rects, but let\u0027s make it simple in this CL.\n\nThanks!",
+      "revId": "e61fd09c3658bc0a038832ccea4b2f0d89de02be",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
