@@ -18,6 +18,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "99439f22_15596292",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 5016462
+      },
+      "writtenOn": "2026-09-11T15:29:32Z",
+      "side": 1,
+      "message": "Done. The first crop now uses (1, 1, 1, 1) before restoring the 2x2 viewport.",
+      "parentUuid": "91992fd8_bc92ef70",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6a327a19_7fb2c6fb",
@@ -31,6 +49,24 @@
       "writtenOn": "2026-09-11T14:55:47Z",
       "side": 1,
       "message": "Nit: I suggest avoiding copying the `vpx_image_t` struct. It is best to treat `vpx_image_t` as a type that should be manilupated with `vpx_img_*` functions.\n\nSince `vpx_img_set_rect` is documented to modify only `d_w`, `d_h`, and `planes[]`, we just need to copy `planes[]`. (`d_w` and `d_h` are both equal to 2, so no need to copy them.)",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5d021ad6_477aabb3",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 5016462
+      },
+      "writtenOn": "2026-09-11T15:29:32Z",
+      "side": 1,
+      "message": "Done. I save only the Y/U/V plane pointers and check that the viewport remains 2x2.",
+      "parentUuid": "6a327a19_7fb2c6fb",
       "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
@@ -52,6 +88,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d55d017d_e1579282",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 5016462
+      },
+      "writtenOn": "2026-09-11T15:29:32Z",
+      "side": 1,
+      "message": "Done. Both calls now use (1, 1, 1, 1).",
+      "parentUuid": "08683afc_a646108f",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "50365752_aed6783c",
@@ -69,6 +123,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "c3383dd0_bb36a4a1",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 5016462
+      },
+      "writtenOn": "2026-09-11T15:29:32Z",
+      "side": 1,
+      "message": "Done. The checks now cover only Y, U and V; the unused alpha plane is excluded.",
+      "parentUuid": "50365752_aed6783c",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "de0f2755_d8f10bc8",
@@ -82,6 +154,24 @@
       "writtenOn": "2026-09-11T14:55:47Z",
       "side": 1,
       "message": "Check that `plane[VPX_PLANE_Y]` has changed.",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9aabfb78_bd3e1bba",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 5016462
+      },
+      "writtenOn": "2026-09-11T15:29:32Z",
+      "side": 1,
+      "message": "Done. The Y-plane pointer is saved immediately before the final crop and checked for a change afterward.",
+      "parentUuid": "de0f2755_d8f10bc8",
       "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
