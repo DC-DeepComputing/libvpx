@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "91992fd8_bc92ef70",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T14:55:47Z",
+      "side": 1,
+      "message": "To cause the `planes[]` pointers to change, the `x` and `y` parameters to `vpx_img_set_rect()` should differ between the two calls. I suggest using the rect (1, 1, 1, 1) for the first call.",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6a327a19_7fb2c6fb",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T14:55:47Z",
+      "side": 1,
+      "message": "Nit: I suggest avoiding copying the `vpx_image_t` struct. It is best to treat `vpx_image_t` as a type that should be manilupated with `vpx_img_*` functions.\n\nSince `vpx_img_set_rect` is documented to modify only `d_w`, `d_h`, and `planes[]`, we just need to copy `planes[]`. (`d_w` and `d_h` are both equal to 2, so no need to copy them.)",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "08683afc_a646108f",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T14:55:47Z",
+      "side": 1,
+      "message": "I suggest using the rect (1, 1, 1, 1) for the next two `vpx_img_set_rect` calls so that we can check whether `planes[]` were modified.",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "50365752_aed6783c",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T14:55:47Z",
+      "side": 1,
+      "message": "I think alpha plane is not used, so we don\u0027t need ot check it.",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "de0f2755_d8f10bc8",
+        "filename": "test/vpx_image_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-09-11T14:55:47Z",
+      "side": 1,
+      "message": "Check that `plane[VPX_PLANE_Y]` has changed.",
+      "revId": "4d1eaa40ab4637ea2df5123c29b1323cffb2e877",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
