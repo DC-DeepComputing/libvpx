@@ -374,6 +374,7 @@ CONFIG_LIST="
     always_adjust_bpm
     bitstream_debug
     mismatch_debug
+    fbounds_safety
     ${EXPERIMENT_LIST}
 "
 CMDLINE_SELECT="
@@ -437,6 +438,7 @@ CMDLINE_SELECT="
     always_adjust_bpm
     bitstream_debug
     mismatch_debug
+    fbounds_safety
 "
 
 process_cmdline() {
@@ -822,6 +824,13 @@ EOF
     esac
     # libwebm needs to be linked with C++ standard library
     enabled webm_io && LD=${CXX}
+
+    if enabled fbounds_safety; then
+        add_cflags -DVPX_SUPPORT_FBOUNDS_SAFETY
+        # Requires experimental Clang -fbounds-safety; inert macros otherwise.
+        check_add_cflags -fbounds-safety || \
+            die "--enable-fbounds-safety needs Clang with -fbounds-safety"
+    fi
 
     # append any user defined extra cflags
     if [ -n "${extra_cflags}" ] ; then
