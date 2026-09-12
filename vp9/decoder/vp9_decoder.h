@@ -23,6 +23,7 @@
 #include "vp9/common/vp9_onyxc_int.h"
 #include "vp9/common/vp9_ppflags.h"
 #include "./vp9_job_queue.h"
+#include "vpx_ports/bounds_safety.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,8 +42,8 @@ typedef struct ThreadData {
 } ThreadData;
 
 typedef struct TileBuffer {
-  const uint8_t *data;
-  size_t size;
+  size_t size;  // capacity declared before pointer for counted_by
+  const uint8_t *data VPX_COUNTED_BY_OR_NULL(size);
   int col;  // only used with multi-threaded decoding
 } TileBuffer;
 
