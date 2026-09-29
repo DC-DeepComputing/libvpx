@@ -51,6 +51,24 @@
       "parentUuid": "525379b4_8d937e70",
       "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d18c51a7_4578c89f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 5
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1532352
+      },
+      "writtenOn": "2026-09-29T11:38:50Z",
+      "side": 1,
+      "message": "Done. The set_rect half landed as 8393177; this now only stops vpx_img_flip() from moving the planes before the buffer when d_h is 0.",
+      "parentUuid": "2c3b36a3_12b3d6dc",
+      "revId": "5eaa89f34c8b26f6e4ebf8675053c28d28e56640",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
