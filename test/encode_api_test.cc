@@ -620,6 +620,37 @@ TEST(EncodeAPI, ValidateConfigVp8) {
   }
 }
 
+// Bug: 564326909.
+TEST(EncodeAPI, SetReferenceValidationVp8) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp8_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+
+  cfg.g_w = 128;
+  cfg.g_h = 128;
+
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t ref_img;
+  ASSERT_NE(vpx_img_alloc(&ref_img, VPX_IMG_FMT_I420, 128, 128, 1), nullptr);
+  memset(ref_img.img_data, 128, ref_img.stride[0] * ref_img.d_h * 3 / 2);
+
+  for (const int plane : { VPX_PLANE_Y, VPX_PLANE_U, VPX_PLANE_V }) {
+    vpx_ref_frame_t ref_frame;
+    ref_frame.frame_type = VP8_LAST_FRAME;
+    ref_frame.img = ref_img;
+    ref_frame.img.planes[plane] = nullptr;
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_SET_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM);
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM);
+  }
+
+  vpx_img_free(&ref_img);
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
 // Emulates the WebCodecs VideoEncoder interface.
 class VP8Encoder {
  public:
