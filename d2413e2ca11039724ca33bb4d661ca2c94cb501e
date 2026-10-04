@@ -1,5 +1,23 @@
 {
-  "comments": [],
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d2c362a6_674a28b7",
+        "filename": "vp8/common/reconinter.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-04T08:57:14Z",
+      "side": 1,
+      "message": "Jerome: Should we put this call inside an `if (x-\u003emode_info_context-\u003embmi.need_to_clamp_mvs)` block?\n\n```\n  if (x-\u003emode_info_context-\u003embmi.need_to_clamp_mvs) {\n    clamp_uvmv_to_umv_border(\u0026_16x16mv.as_mv, x);\n  }\n```\n\nI found this potential issue by pattern matching.",
+      "revId": "d2413e2ca11039724ca33bb4d661ca2c94cb501e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ],
   "submitRequirementResults": [
     {
       "submitRequirement": {
