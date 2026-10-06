@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "912d6331_ec307aa0",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-06T18:16:00Z",
+      "side": 1,
+      "message": "this is nested inside `CONFIG_VP8_ENCODER`",
+      "range": {
+        "startLine": 651,
+        "startChar": 0,
+        "endLine": 651,
+        "endChar": 44
+      },
+      "revId": "59be3b28a52f962743be78c02594a329ad8ae834",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
