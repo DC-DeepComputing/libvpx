@@ -14,6 +14,11 @@
 #include "gtest/gtest.h"
 
 #include "./vpx_config.h"
+#if CONFIG_VP8_DECODER && CONFIG_MULTITHREAD && defined(__linux__)
+#include <stdio.h>
+#include <sys/resource.h>
+#include "vpx_util/vpx_thread.h"
+#endif
 #include "test/ivf_video_source.h"
 #include "test/video_source.h"
 #if CONFIG_VP8_ENCODER || CONFIG_VP9_ENCODER
@@ -354,6 +359,197 @@ TEST(DecodeAPI, Vp8MultiThreadedWorkerDecodeErrorFailsFrame) {
   EXPECT_EQ(vpx_codec_destroy(&dec), VPX_CODEC_OK);
 }
 #endif  // CONFIG_VP8_ENCODER && CONFIG_MULTITHREAD
+
+#if CONFIG_MULTITHREAD && defined(__linux__)
+std::vector<uint8_t> MakeVp8KeyFrame(int w, int h, int header_w, int header_h,
+                                     bool two_partitions, bool truncate_part0) {
+  const int mbw = (w + 15) >> 4;
+  const int mbs = mbw * ((h + 15) >> 4);
+  uint32_t low = 0;
+  uint32_t range = 255;
+  int count = -24;
+  std::vector<uint8_t> p1;
+  auto put_bit = [&](int bit) {
+    const uint32_t split = 1 + (((range - 1) * 128) >> 8);
+    uint32_t r = split;
+    if (bit) {
+      low += split;
+      r = range - split;
+    }
+    int shift = 0;
+    while ((r << shift) < 128) ++shift;
+    r <<= shift;
+    int c = count + shift;
+    if (c >= 0) {
+      const int off = shift - c;
+      if ((low << (off - 1)) & 0x80000000u) {
+        size_t x = p1.size() - 1;
+        while (x > 0 && p1[x] == 255) p1[x--] = 0;
+        p1[x]++;
+      }
+      p1.push_back(static_cast<uint8_t>((low >> (24 - off)) & 255));
+      low = (low << off) & 0xffffffu;
+      shift = c;
+      c -= 8;
+    }
+    low <<= shift;
+    count = c;
+    range = r;
+  };
+  auto put_bits = [&](int v, int n) {
+    for (int i = n - 1; i >= 0; --i) put_bit((v >> i) & 1);
+  };
+  put_bits(0, 1);                       // color_space
+  put_bits(0, 1);                       // clamping_type
+  put_bits(0, 1);                       // segmentation_enabled
+  put_bits(0, 1);                       // filter_type
+  put_bits(63, 6);                      // loop_filter_level
+  put_bits(0, 3);                       // sharpness_level
+  put_bits(0, 1);                       // mode_ref_lf_delta_enabled
+  put_bits(two_partitions ? 1 : 0, 2);  // log2_nbr_of_dct_partitions
+  put_bits(20, 7);                      // y_ac_qi
+  put_bits(0, 5);                       // delta_q flags
+  put_bits(0, 1);                       // refresh_entropy_probs
+  for (int i = 0; i < 32; ++i) put_bit(0);
+
+  const size_t p1len = p1.size() + (mbs * 3 + 3) / 4 + 64;
+  const size_t np = two_partitions ? 2 : 1;
+  const size_t room = (mbs * 4 + np - 1) / np + mbw * 4 + 64;
+  const size_t len0 = two_partitions ? (truncate_part0 ? 1 : room) : room;
+  const size_t total_len = two_partitions ? (len0 + room) : room;
+  std::vector<uint8_t> out(10 + p1len + 3 * (np - 1) + total_len, 0);
+  const uint32_t tag = (1u << 4) | (static_cast<uint32_t>(p1len) << 5);
+  out[0] = tag & 255;
+  out[1] = (tag >> 8) & 255;
+  out[2] = (tag >> 16) & 255;
+  out[3] = 0x9d;
+  out[4] = 0x01;
+  out[5] = 0x2a;
+  out[6] = header_w & 255;
+  out[7] = (header_w >> 8) & 0x3f;
+  out[8] = header_h & 255;
+  out[9] = (header_h >> 8) & 0x3f;
+  memcpy(out.data() + 10, p1.data(), p1.size());
+  if (two_partitions) {
+    out[10 + p1len] = len0 & 255;
+    out[10 + p1len + 1] = (len0 >> 8) & 255;
+    out[10 + p1len + 2] = (len0 >> 16) & 255;
+  }
+  return out;
+}
+
+size_t GetVmDataBytes() {
+  FILE *f = fopen("/proc/self/status", "r");
+  if (!f) return 0;
+  char line[256];
+  size_t kb = 0;
+  while (fgets(line, sizeof(line), f)) {
+    if (sscanf(line, "VmData: %zu kB", &kb) == 1) break;
+  }
+  fclose(f);
+  return kb * 1024;
+}
+
+// Issue: 571147583
+// Verifies that when restarting decode threads fails on a key frame with a new
+// resolution, the cached stream info dimensions (ctx->si.w, ctx->si.h) are
+// cleared so that a subsequent decode still triggers a resolution change and
+// reallocates frame buffers to match the temporary multithread row buffers.
+TEST(DecodeAPI, Vp8MultiThreadedRestartResolutionChange) {
+  constexpr int kBig = 256;
+  constexpr int kSmallW = 16;
+  constexpr int kSmallH = 64;
+  const std::vector<uint8_t> good =
+      MakeVp8KeyFrame(kBig, kBig, kBig, kBig, true, false);
+  const std::vector<uint8_t> bad =
+      MakeVp8KeyFrame(kBig, kBig, kBig, kBig, true, true);
+  const std::vector<uint8_t> odd =
+      MakeVp8KeyFrame(kBig, kBig, kSmallW, kSmallH, true, true);
+  const std::vector<uint8_t> good_small =
+      MakeVp8KeyFrame(kSmallW, kSmallH, kSmallW, kSmallH, true, false);
+
+  vpx_codec_ctx_t dec;
+  vpx_codec_dec_cfg_t dec_cfg = { /*threads=*/2, /*w=*/0, /*h=*/0 };
+  ASSERT_EQ(vpx_codec_dec_init(&dec, &vpx_codec_vp8_dx_algo, &dec_cfg, 0),
+            VPX_CODEC_OK);
+
+  // Frame 0: valid 256x256 keyframe initializes 256x256 buffers and 1 worker.
+  ASSERT_EQ(
+      vpx_codec_decode(&dec, good.data(),
+                       static_cast<unsigned int>(good.size()), nullptr, 0),
+      VPX_CODEC_OK);
+
+  // Frame 1: truncated 256x256 keyframe fails in vp8mt_decode_mb_rows, which
+  // shuts down worker threads and sets restart_threads = 1.
+  EXPECT_EQ(vpx_codec_decode(&dec, bad.data(),
+                             static_cast<unsigned int>(bad.size()), nullptr, 0),
+            VPX_CODEC_CORRUPT_FRAME);
+
+  auto decode_with_thread_start_failure = [&]() {
+    // Hold cached pthread stacks with helper workers that have already
+    // finished starting, so pthread_create in vp8_decoder_create_threads must
+    // mmap a new 8 MiB stack.
+    constexpr int kNumHolders = 6;
+    const VPxWorkerInterface *const winterface = vpx_get_worker_interface();
+    VPxWorker holders[kNumHolders];
+    for (int i = 0; i < kNumHolders; ++i) {
+      winterface->init(&holders[i]);
+      holders[i].hook = [](void *, void *) -> int { return 1; };
+      ASSERT_NE(winterface->reset(&holders[i]), 0);
+      winterface->launch(&holders[i]);
+    }
+    for (int i = 0; i < kNumHolders; ++i) {
+      ASSERT_NE(winterface->sync(&holders[i]), 0);
+    }
+    struct rlimit old_lim;
+    ASSERT_EQ(getrlimit(RLIMIT_DATA, &old_lim), 0);
+    const size_t vm_data = GetVmDataBytes();
+    if (vm_data > 0) {
+      struct rlimit tight_lim = old_lim;
+      tight_lim.rlim_cur = vm_data + (4 << 20);
+      ASSERT_EQ(setrlimit(RLIMIT_DATA, &tight_lim), 0);
+    }
+    const vpx_codec_err_t res = vpx_codec_decode(
+        &dec, odd.data(), static_cast<unsigned int>(odd.size()), nullptr, 0);
+    ASSERT_EQ(setrlimit(RLIMIT_DATA, &old_lim), 0);
+    for (int i = 0; i < kNumHolders; ++i) {
+      winterface->end(&holders[i]);
+    }
+    EXPECT_EQ(res, VPX_CODEC_ERROR);
+  };
+
+  // Frame 2: 16x64 keyframe header while thread restart fails.
+  decode_with_thread_start_failure();
+
+  // Frame 3: 16x64 keyframe header; thread restart succeeds, decoding fails.
+  EXPECT_EQ(vpx_codec_decode(&dec, odd.data(),
+                             static_cast<unsigned int>(odd.size()), nullptr, 0),
+            VPX_CODEC_CORRUPT_FRAME);
+
+  // Frame 4: 16x64 keyframe header while thread restart fails again.
+  decode_with_thread_start_failure();
+
+  // Frame 5: 16x64 keyframe header; thread restart succeeds. Without clearing
+  // ctx->si on thread restart failure, mt_yabove_row is allocated for width 16
+  // while yv12_fb_new->y_width remains 256, overflowing mt_yabove_row.
+  EXPECT_EQ(vpx_codec_decode(&dec, odd.data(),
+                             static_cast<unsigned int>(odd.size()), nullptr, 0),
+            VPX_CODEC_CORRUPT_FRAME);
+
+  // Frame 6: valid 16x64 keyframe should decode and output a 16x64 frame.
+  EXPECT_EQ(vpx_codec_decode(&dec, good_small.data(),
+                             static_cast<unsigned int>(good_small.size()),
+                             nullptr, 0),
+            VPX_CODEC_OK);
+  vpx_codec_iter_t iter = nullptr;
+  const vpx_image_t *img = vpx_codec_get_frame(&dec, &iter);
+  ASSERT_NE(img, nullptr);
+  EXPECT_EQ(img->d_w, static_cast<unsigned int>(kSmallW));
+  EXPECT_EQ(img->d_h, static_cast<unsigned int>(kSmallH));
+
+  EXPECT_EQ(vpx_codec_destroy(&dec), VPX_CODEC_OK);
+}
+#endif  // CONFIG_MULTITHREAD && defined(__linux__)
 #endif  // CONFIG_VP8_DECODER
 
 #if CONFIG_VP9_DECODER
