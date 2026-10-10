@@ -264,6 +264,11 @@ void vpx_img_flip(vpx_image_t *img) {
   const unsigned int chroma_height =
       (img->d_h + img->y_chroma_shift) >> img->y_chroma_shift;
 
+  /* A zero-height image has no rows to flip. Without this check the
+   * (d_h - 1) terms below underflow the unsigned subtraction and the
+   * plane pointers are corrupted (wild pointer + negated stride). */
+  if (img->d_h == 0) return;
+
   img->planes[VPX_PLANE_Y] +=
       (ptrdiff_t)(img->d_h - 1) * img->stride[VPX_PLANE_Y];
   img->stride[VPX_PLANE_Y] = -img->stride[VPX_PLANE_Y];
