@@ -1919,6 +1919,15 @@ static vpx_codec_err_t ctrl_set_svc_layer_id(vpx_codec_alg_priv_t *ctx,
   svc->temporal_layer_id = data->temporal_layer_id;
   // Allow for setting temporal layer per spatial layer for superframe.
   for (sl = 0; sl < cpi->svc.number_spatial_layers; ++sl) {
+    // Each per-spatial temporal layer id is later used as an index into
+    // svc->layer_context[] (see
+    // set_flags_and_fb_idx_bypass_via_set_ref_frame_config()), so it must
+    // satisfy the same bounds as the plain temporal_layer_id.
+    if (data->temporal_layer_id_per_spatial[sl] < 0 ||
+        data->temporal_layer_id_per_spatial[sl] >=
+            (int)ctx->cfg.ts_number_layers) {
+      return VPX_CODEC_INVALID_PARAM;
+    }
     svc->temporal_layer_id_per_spatial[sl] =
         data->temporal_layer_id_per_spatial[sl];
   }
