@@ -22,6 +22,30 @@
       },
       "revId": "f591b718b606e68c8aee74e498e4b9a2255d3593",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6f5e44a7_bc472cd7",
+        "filename": "vp9/encoder/vp9_encoder.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4467,
+      "author": {
+        "id": 1125049
+      },
+      "writtenOn": "2026-10-12T18:09:00Z",
+      "side": 1,
+      "message": "Good catch — removed `\u0026\u0026 loop_count \u003d\u003d 0`. In the unscaled case `set_raw_source_frame()` only points `raw_source_frame` to `raw_unscaled_source` (copied once in `vp9_get_compressed_data`), and if a resize occurs on `loop_count \u003e 0` we want `set_raw_source_frame()` to run again anyway.",
+      "parentUuid": "2690212e_fe8639d1",
+      "range": {
+        "startLine": 4467,
+        "startChar": 33,
+        "endLine": 4467,
+        "endChar": 52
+      },
+      "revId": "f591b718b606e68c8aee74e498e4b9a2255d3593",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
