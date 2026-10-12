@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2690212e_fe8639d1",
+        "filename": "vp9/encoder/vp9_encoder.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4467,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-12T17:15:21Z",
+      "side": 1,
+      "message": "why is this condition needed? it seems unnecessary because the code change above (in line 4101) is very similar and there\u0027s no such condition.",
+      "range": {
+        "startLine": 4467,
+        "startChar": 33,
+        "endLine": 4467,
+        "endChar": 52
+      },
+      "revId": "f591b718b606e68c8aee74e498e4b9a2255d3593",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
