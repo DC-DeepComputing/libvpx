@@ -62,6 +62,7 @@
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 #include <limits.h>
 
 #if CONFIG_REALTIME_ONLY & CONFIG_ONTHEFLY_BITPACKING
@@ -2433,6 +2434,17 @@ int vp8_update_reference(VP8_COMP *cpi, int ref_frame_flags) {
   return 0;
 }
 
+static void copy_plane(const unsigned char *src, int src_stride,
+                       unsigned char *dst, int dst_stride, int width,
+                       int height) {
+  int row;
+  for (row = 0; row < height; ++row) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
+  }
+}
+
 int vp8_get_reference(VP8_COMP *cpi, enum vpx_ref_frame_type ref_frame_flag,
                       YV12_BUFFER_CONFIG *sd) {
   VP8_COMMON *cm = &cpi->common;
@@ -2453,7 +2465,18 @@ int vp8_get_reference(VP8_COMP *cpi, enum vpx_ref_frame_type ref_frame_flag,
     return -1;
   }
 
-  vp8_yv12_copy_frame(&cm->yv12_fb[ref_fb_idx], sd);
+  /* Copy the frame without extending its borders: sd is the caller's image,
+   * which need not have room for them.
+   */
+  {
+    const YV12_BUFFER_CONFIG *const ref = &cm->yv12_fb[ref_fb_idx];
+    copy_plane(ref->y_buffer, ref->y_stride, sd->y_buffer, sd->y_stride,
+               ref->y_width, ref->y_height);
+    copy_plane(ref->u_buffer, ref->uv_stride, sd->u_buffer, sd->uv_stride,
+               ref->uv_width, ref->uv_height);
+    copy_plane(ref->v_buffer, ref->uv_stride, sd->v_buffer, sd->uv_stride,
+               ref->uv_width, ref->uv_height);
+  }
 
   return 0;
 }
