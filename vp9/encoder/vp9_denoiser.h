@@ -50,6 +50,8 @@ typedef struct vp9_denoiser {
   int reset;
   int num_ref_frames;
   int num_layers;
+  // Whether the buffers were allocated for SVC mode.
+  int use_svc;
   unsigned int current_denoiser_frame;
   VP9_DENOISER_LEVEL denoising_level;
   VP9_DENOISER_LEVEL prev_denoising_level;

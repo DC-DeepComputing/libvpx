@@ -3451,6 +3451,101 @@ TEST(EncodeAPI, Vp9EncoderMidstreamReconfig4) {
   VerifyVp9EncoderMidstreamReconfig(128, 128, true, 256, 256, false, 512, 512,
                                     true);
 }
+
+#if CONFIG_VP9_TEMPORAL_DENOISING
+// Encodes |num_frames| frames at the current configured resolution.
+void EncodeVp9Frames(vpx_codec_ctx_t *enc, const vpx_codec_enc_cfg_t &cfg,
+                     int num_frames, vpx_codec_pts_t *pts) {
+  vpx_image_t *const image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  for (int i = 0; i < num_frames; ++i) {
+    ASSERT_EQ(vpx_codec_encode(enc, image, (*pts)++, 1, 0, VPX_DL_REALTIME),
+              VPX_CODEC_OK);
+  }
+  vpx_img_free(image);
+}
+
+// Enables SVC mode after frames were encoded with the denoiser in non-SVC
+// mode. The denoiser keeps more reference buffers in SVC mode, so it must be
+// set up again.
+TEST(EncodeAPI, Vp9DenoiserEnableSvcAfterEncode) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 320;
+  cfg.g_h = 240;
+  cfg.g_timebase.num = 1;
+  cfg.g_timebase.den = 30;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.rc_target_bitrate = 500;
+  cfg.g_lag_in_frames = 0;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 7), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_NOISE_SENSITIVITY, 1),
+            VPX_CODEC_OK);
+
+  vpx_codec_pts_t pts = 0;
+  EncodeVp9Frames(&enc, cfg, 3, &pts);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC, 1), VPX_CODEC_OK);
+  EncodeVp9Frames(&enc, cfg, 5, &pts);
+
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// Codes frames at half size with VP8E_SET_SCALEMODE and then at the
+// configured size with the denoiser enabled. The denoiser buffers must follow
+// the internal frame size.
+TEST(EncodeAPI, Vp9DenoiserScaleModeIncrease) {
+  constexpr unsigned int kWidth = 640;
+  constexpr unsigned int kHeight = 2048;
+  for (int speed = 5; speed <= 6; ++speed) {
+    vpx_codec_enc_cfg_t cfg;
+    ASSERT_EQ(vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0),
+              VPX_CODEC_OK);
+    cfg.g_w = kWidth;
+    cfg.g_h = kHeight;
+    cfg.g_threads = 1;
+    cfg.g_lag_in_frames = 0;
+    cfg.rc_end_usage = VPX_CBR;
+    cfg.rc_target_bitrate = 2000;
+    vpx_codec_ctx_t enc;
+    ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+              VPX_CODEC_OK);
+    ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, speed), VPX_CODEC_OK);
+    ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_NOISE_SENSITIVITY, 1),
+              VPX_CODEC_OK);
+    ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_AQ_MODE, 3), VPX_CODEC_OK);
+    vpx_image_t *image =
+        CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+    ASSERT_NE(image, nullptr);
+    std::vector<uint8_t> base(kWidth * kHeight);
+    for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+      base[j] =
+          static_cast<uint8_t>(((j % kWidth) / 16 + (j / kWidth) / 16) * 7);
+    }
+    libvpx_test::ACMRandom rnd;
+    vpx_codec_pts_t pts = 0;
+    for (int phase = 0; phase < 2; ++phase) {
+      const VPX_SCALING_MODE scale = phase == 0 ? VP8E_ONETWO : VP8E_NORMAL;
+      vpx_scaling_mode_t mode = { scale, scale };
+      ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode),
+                VPX_CODEC_OK);
+      for (int i = 0; i < 10; ++i, ++pts) {
+        for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+          image->planes[VPX_PLANE_Y][j] =
+              static_cast<uint8_t>(base[j] + (rnd.Rand8() & 15));
+        }
+        ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, VPX_DL_REALTIME),
+                  VPX_CODEC_OK);
+      }
+    }
+    vpx_img_free(image);
+    ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+  }
+}
+#endif  // CONFIG_VP9_TEMPORAL_DENOISING
 #endif  // CONFIG_VP9_ENCODER
 
 #if CONFIG_VP9_ENCODER

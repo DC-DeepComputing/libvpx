@@ -2072,6 +2072,12 @@ static void free_copy_partition_data(VP9_COMP *cpi) {
 #if CONFIG_VP9_TEMPORAL_DENOISING
 static void setup_denoiser_buffer(VP9_COMP *cpi) {
   VP9_COMMON *const cm = &cpi->common;
+  // The number of denoiser buffers depends on SVC mode, which may have been
+  // changed since they were allocated.
+  if (cpi->denoiser.frame_buffer_initialized &&
+      cpi->denoiser.use_svc != cpi->use_svc) {
+    vp9_denoiser_free(&cpi->denoiser);
+  }
   if (cpi->oxcf.noise_sensitivity > 0 &&
       !cpi->denoiser.frame_buffer_initialized) {
     if (vp9_denoiser_alloc(cm, &cpi->svc, &cpi->denoiser, cpi->use_svc,
@@ -3859,6 +3865,20 @@ static void set_frame_size(VP9_COMP *cpi) {
 
   alloc_util_frame_buffers(cpi);
   init_motion_estimation(cpi);
+
+#if CONFIG_VP9_TEMPORAL_DENOISING
+  // Without SVC the denoiser buffers have the coded frame size. Set them up
+  // again when it differs (VP8E_SET_SCALEMODE, two-pass resize), and when they
+  // were released, also for frames coded from the lookahead on a flush.
+  if (!cpi->use_svc) {
+    if (cpi->denoiser.frame_buffer_initialized &&
+        (cpi->denoiser.last_source.y_crop_width != cm->width ||
+         cpi->denoiser.last_source.y_crop_height != cm->height)) {
+      vp9_denoiser_free(&cpi->denoiser);
+    }
+    setup_denoiser_buffer(cpi);
+  }
+#endif
 
   int has_valid_ref_frame = 0;
   for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
