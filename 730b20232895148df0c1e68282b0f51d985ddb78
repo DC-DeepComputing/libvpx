@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "71098ee2_4785212b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5212422
+      },
+      "writtenOn": "2026-10-13T09:46:58Z",
+      "side": 1,
+      "message": "Hi Jerome, Marco, James, a gentle ping on this change. Patch Set 3 moves the VP9 test out of the VP8-only block as Jerome asked, and presubmit is green. Could one of you take another look when you have a moment? Thanks!",
+      "revId": "730b20232895148df0c1e68282b0f51d985ddb78",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
