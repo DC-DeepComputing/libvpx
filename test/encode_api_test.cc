@@ -4253,6 +4253,89 @@ TEST(EncodeAPI, Vp9TwoPassDynamicResize) {
   vpx_img_free(image);
 }
 
+// Sets an ROI map at one frame size and keeps encoding after
+// vpx_codec_enc_config_set() changes the frame size. The ROI map must not be
+// applied to frames of another size: it is only as large as the frame it was
+// set for.
+void EncodeWithRoiMapAcrossResize(int init_w, int init_h, int roi_w, int roi_h,
+                                  int new_w, int new_h) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = init_w;
+  cfg.g_h = init_h;
+  cfg.g_lag_in_frames = 0;
+  cfg.g_pass = VPX_RC_ONE_PASS;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.rc_target_bitrate = 500;
+
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 7), VPX_CODEC_OK);
+
+  int pts = 0;
+  auto encode_frames = [&](int w, int h, int count) {
+    vpx_image_t *const img = CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, w, h);
+    ASSERT_NE(img, nullptr);
+    for (int i = 0; i < count; ++i) {
+      ASSERT_EQ(vpx_codec_encode(&enc, img, pts++, 1, 0, VPX_DL_REALTIME),
+                VPX_CODEC_OK);
+      vpx_codec_iter_t iter = nullptr;
+      while (vpx_codec_get_cx_data(&enc, &iter) != nullptr) {
+      }
+    }
+    vpx_img_free(img);
+  };
+  auto set_size = [&](int w, int h) {
+    cfg.g_w = w;
+    cfg.g_h = h;
+    ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  };
+
+  encode_frames(init_w, init_h, 2);
+  if (roi_w != init_w || roi_h != init_h) {
+    set_size(roi_w, roi_h);
+    encode_frames(roi_w, roi_h, 2);
+  }
+
+  // The ROI map is in 8x8 block units.
+  const unsigned int rows = (roi_h + 7) >> 3;
+  const unsigned int cols = (roi_w + 7) >> 3;
+  std::vector<uint8_t> roi_map(rows * cols);
+  for (size_t i = 0; i < roi_map.size(); ++i) roi_map[i] = i & 1;
+  vpx_roi_map_t roi = {};
+  roi.rows = rows;
+  roi.cols = cols;
+  roi.roi_map = roi_map.data();
+  roi.delta_q[1] = -10;
+  for (int i = 0; i < 8; ++i) roi.ref_frame[i] = -1;
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_ROI_MAP, &roi), VPX_CODEC_OK);
+  encode_frames(roi_w, roi_h, 2);
+
+  set_size(new_w, new_h);
+  encode_frames(new_w, new_h, 3);
+  // Back to the size the ROI map was set for: it applies again.
+  set_size(roi_w, roi_h);
+  encode_frames(roi_w, roi_h, 2);
+
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// The new frame size is larger than the initial one.
+TEST(EncodeAPI, Vp9RoiMapGrowFrameSize) {
+  EncodeWithRoiMapAcrossResize(64, 64, 64, 64, 640, 480);
+}
+
+// The new frame size is within the initial one, so the encoder's frame
+// buffers are not reallocated.
+TEST(EncodeAPI, Vp9RoiMapGrowFrameSizeWithinInitialSize) {
+  EncodeWithRoiMapAcrossResize(640, 480, 64, 64, 640, 480);
+}
+
+// A smaller frame size.
+TEST(EncodeAPI, Vp9RoiMapShrinkFrameSize) {
+  EncodeWithRoiMapAcrossResize(640, 480, 640, 480, 64, 64);
+}
 #endif  // CONFIG_VP9_ENCODER
 
 }  // namespace

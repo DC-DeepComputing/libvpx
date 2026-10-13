@@ -576,6 +576,16 @@ static void apply_active_map(VP9_COMP *cpi) {
   }
 }
 
+// The ROI map is sized for the frame dimensions at the time it was set
+// (vp9_set_roi_map() requires an exact match). A frame of another size (after
+// vpx_codec_enc_config_set(), an internal resize, or another spatial layer)
+// is not described by it, so the map is applied only to frames of its size.
+static int roi_map_matches_frame(const VP9_COMP *cpi) {
+  const VP9_COMMON *const cm = &cpi->common;
+  return cpi->roi.enabled && (int)cpi->roi.rows == cm->mi_rows &&
+         (int)cpi->roi.cols == cm->mi_cols;
+}
+
 static void apply_roi_map(VP9_COMP *cpi) {
   VP9_COMMON *cm = &cpi->common;
   struct segmentation *const seg = &cm->seg;
@@ -590,7 +600,7 @@ static void apply_roi_map(VP9_COMP *cpi) {
   // TODO(jianj): Investigate why ROI not working in speed < 5 or in non
   // realtime mode.
   if (cpi->oxcf.mode != REALTIME || cpi->oxcf.speed < 5) return;
-  if (!roi->enabled) return;
+  if (!roi_map_matches_frame(cpi)) return;
 
   memcpy(&ref_frame, roi->ref_frame, sizeof(ref_frame));
 
@@ -4322,7 +4332,7 @@ static int encode_without_recode_loop(VP9_COMP *cpi, size_t *size,
     // If ROI is enabled and skip feature is used for segmentation, apply cyclic
     // refresh but not apply ROI for skip for the first 20 frames (defined by
     // FRAMES_NO_SKIPPING_AFTER_KEY) after key frame to improve quality.
-    if (cpi->roi.enabled && !frame_is_intra_only(cm)) {
+    if (roi_map_matches_frame(cpi) && !frame_is_intra_only(cm)) {
       if (cpi->roi.skip[BACKGROUND_SEG_SKIP_ID]) {
         if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ)
           vp9_cyclic_refresh_setup(cpi);
@@ -4333,6 +4343,9 @@ static int encode_without_recode_loop(VP9_COMP *cpi, size_t *size,
       }
     } else if (cpi->oxcf.aq_mode == CYCLIC_REFRESH_AQ) {
       vp9_cyclic_refresh_setup(cpi);
+    } else if (cpi->roi.enabled && !roi_map_matches_frame(cpi)) {
+      // Do not keep the ROI segmentation of a frame of another size.
+      vp9_disable_segmentation(&cm->seg);
     }
 
 #if !CONFIG_REALTIME_ONLY
