@@ -4307,6 +4307,79 @@ TEST(EncodeAPI, VP9DenoiserResolutionChange) {
 
   ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
+
+// Encodes frames with the denoiser on, passing `flags` for every frame after
+// the first (key) frame.
+void EncodeWithDenoiser(vpx_enc_deadline_t deadline,
+                        vpx_enc_frame_flags_t flags) {
+  constexpr int kWidth = 336;
+  constexpr int kHeight = 64;
+  constexpr int kNumFrames = 10;
+
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  cfg.g_lag_in_frames = 0;
+
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_NOISE_SENSITIVITY, 3),
+            VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, kWidth, kHeight);
+  ASSERT_NE(img, nullptr);
+  for (int i = 0; i < kNumFrames; ++i) {
+    for (int y = 0; y < kHeight; ++y) {
+      memset(img->planes[VPX_PLANE_Y] + y * img->stride[VPX_PLANE_Y],
+             (i * 7 + y) & 0xff, kWidth);
+    }
+    ASSERT_EQ(vpx_codec_encode(&enc, img, i, 1, i == 0 ? 0 : flags, deadline),
+              VPX_CODEC_OK);
+  }
+
+  vpx_img_free(img);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// Without SVC the denoiser only keeps buffers for the last and golden
+// references. Frames that refresh the alt-ref, alone or together with other
+// references, must not update a denoiser buffer that does not exist.
+TEST(EncodeAPI, Vp9DenoiserNoUpdateLastRealtime) {
+  ASSERT_NO_FATAL_FAILURE(
+      EncodeWithDenoiser(VPX_DL_REALTIME, VP8_EFLAG_NO_UPD_LAST));
+}
+
+TEST(EncodeAPI, Vp9DenoiserNoUpdateLastGoodQuality) {
+  ASSERT_NO_FATAL_FAILURE(
+      EncodeWithDenoiser(VPX_DL_GOOD_QUALITY, VP8_EFLAG_NO_UPD_LAST));
+}
+
+TEST(EncodeAPI, Vp9DenoiserForceGoldenRealtime) {
+  ASSERT_NO_FATAL_FAILURE(
+      EncodeWithDenoiser(VPX_DL_REALTIME, VP8_EFLAG_FORCE_GF));
+}
+
+TEST(EncodeAPI, Vp9DenoiserForceArfRealtime) {
+  ASSERT_NO_FATAL_FAILURE(EncodeWithDenoiser(
+      VPX_DL_REALTIME,
+      VP8_EFLAG_FORCE_ARF | VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF));
+}
+
+TEST(EncodeAPI, Vp9DenoiserNoUpdateGoldenRealtime) {
+  ASSERT_NO_FATAL_FAILURE(
+      EncodeWithDenoiser(VPX_DL_REALTIME, VP8_EFLAG_NO_UPD_GF));
+}
+
+TEST(EncodeAPI, Vp9DenoiserRealtime) {
+  ASSERT_NO_FATAL_FAILURE(EncodeWithDenoiser(VPX_DL_REALTIME, 0));
+}
+
+TEST(EncodeAPI, Vp9DenoiserGoodQuality) {
+  ASSERT_NO_FATAL_FAILURE(EncodeWithDenoiser(VPX_DL_GOOD_QUALITY, 0));
+}
 #endif  // CONFIG_VP9_TEMPORAL_DENOISING
 #endif  // CONFIG_VP9_ENCODER
 
