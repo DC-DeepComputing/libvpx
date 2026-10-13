@@ -2931,26 +2931,87 @@ static YV12_BUFFER_CONFIG *get_vp9_ref_frame_buffer(
                                    : get_ref_frame_buffer(cpi, ref_frame);
 }
 
-int vp9_copy_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
-                           YV12_BUFFER_CONFIG *sd) {
-  YV12_BUFFER_CONFIG *cfg = get_vp9_ref_frame_buffer(cpi, ref_frame_flag);
-  if (cfg) {
-    vpx_yv12_copy_frame(cfg, sd);
+// Returns 1 if the visible area of a and b has the same dimensions in every
+// plane and the same sample size.
+static int same_frame_format(const YV12_BUFFER_CONFIG *a,
+                             const YV12_BUFFER_CONFIG *b) {
+  if (a->y_crop_width != b->y_crop_width ||
+      a->y_crop_height != b->y_crop_height ||
+      a->uv_crop_width != b->uv_crop_width ||
+      a->uv_crop_height != b->uv_crop_height) {
     return 0;
-  } else {
-    return -1;
+  }
+#if CONFIG_VP9_HIGHBITDEPTH
+  if ((a->flags & YV12_FLAG_HIGHBITDEPTH) !=
+      (b->flags & YV12_FLAG_HIGHBITDEPTH)) {
+    return 0;
+  }
+#endif
+  return 1;
+}
+
+static void copy_plane(const uint8_t *src, int src_stride, uint8_t *dst,
+                       int dst_stride, int width, int height) {
+  int row;
+  for (row = 0; row < height; ++row) {
+    memcpy(dst, src, width);
+    src += src_stride;
+    dst += dst_stride;
   }
 }
 
-int vp9_set_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
-                          YV12_BUFFER_CONFIG *sd) {
-  YV12_BUFFER_CONFIG *cfg = get_vp9_ref_frame_buffer(cpi, ref_frame_flag);
-  if (cfg) {
-    vpx_yv12_copy_frame(sd, cfg);
-    return 0;
-  } else {
-    return -1;
+// Copies the visible area of src to dst. The two frames must have the same
+// format (see same_frame_format()).
+static void copy_visible_frame(const YV12_BUFFER_CONFIG *src,
+                               YV12_BUFFER_CONFIG *dst) {
+  const uint8_t *src_y = src->y_buffer;
+  const uint8_t *src_u = src->u_buffer;
+  const uint8_t *src_v = src->v_buffer;
+  uint8_t *dst_y = dst->y_buffer;
+  uint8_t *dst_u = dst->u_buffer;
+  uint8_t *dst_v = dst->v_buffer;
+  int bytes_per_sample = 1;
+#if CONFIG_VP9_HIGHBITDEPTH
+  if (src->flags & YV12_FLAG_HIGHBITDEPTH) {
+    src_y = (const uint8_t *)CONVERT_TO_SHORTPTR(src_y);
+    src_u = (const uint8_t *)CONVERT_TO_SHORTPTR(src_u);
+    src_v = (const uint8_t *)CONVERT_TO_SHORTPTR(src_v);
+    dst_y = (uint8_t *)CONVERT_TO_SHORTPTR(dst_y);
+    dst_u = (uint8_t *)CONVERT_TO_SHORTPTR(dst_u);
+    dst_v = (uint8_t *)CONVERT_TO_SHORTPTR(dst_v);
+    bytes_per_sample = 2;
   }
+#endif
+  copy_plane(src_y, src->y_stride * bytes_per_sample, dst_y,
+             dst->y_stride * bytes_per_sample,
+             src->y_crop_width * bytes_per_sample, src->y_crop_height);
+  copy_plane(src_u, src->uv_stride * bytes_per_sample, dst_u,
+             dst->uv_stride * bytes_per_sample,
+             src->uv_crop_width * bytes_per_sample, src->uv_crop_height);
+  copy_plane(src_v, src->uv_stride * bytes_per_sample, dst_v,
+             dst->uv_stride * bytes_per_sample,
+             src->uv_crop_width * bytes_per_sample, src->uv_crop_height);
+}
+
+vpx_codec_err_t vp9_copy_reference_enc(VP9_COMP *cpi,
+                                       VP9_REFFRAME ref_frame_flag,
+                                       YV12_BUFFER_CONFIG *sd) {
+  const YV12_BUFFER_CONFIG *cfg = get_vp9_ref_frame_buffer(cpi, ref_frame_flag);
+  if (cfg == NULL) return VPX_CODEC_ERROR;
+  if (!same_frame_format(cfg, sd)) return VPX_CODEC_INVALID_PARAM;
+  copy_visible_frame(cfg, sd);
+  return VPX_CODEC_OK;
+}
+
+vpx_codec_err_t vp9_set_reference_enc(VP9_COMP *cpi,
+                                      VP9_REFFRAME ref_frame_flag,
+                                      const YV12_BUFFER_CONFIG *sd) {
+  YV12_BUFFER_CONFIG *cfg = get_vp9_ref_frame_buffer(cpi, ref_frame_flag);
+  if (cfg == NULL) return VPX_CODEC_ERROR;
+  if (!same_frame_format(cfg, sd)) return VPX_CODEC_INVALID_PARAM;
+  copy_visible_frame(sd, cfg);
+  vpx_extend_frame_borders(cfg);
+  return VPX_CODEC_OK;
 }
 
 int vp9_update_entropy(VP9_COMP *cpi, int update) {
