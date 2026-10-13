@@ -796,6 +796,10 @@ typedef struct VP9_COMP {
                     // normalize the firstpass stats. This will differ from the
                     // number of MBs in the current frame when the frame is
                     // scaled.
+  // Set while vp9_change_config() reallocates the frame-size dependent
+  // buffers. Remains set if the reallocation fails, in which case the buffers
+  // are incomplete until a later vp9_change_config() redoes it.
+  int realloc_pending;
 
   int last_coded_width;
   int last_coded_height;
