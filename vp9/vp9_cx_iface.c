@@ -965,13 +965,23 @@ static vpx_codec_err_t ctrl_get_loopfilter_level(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t update_extra_cfg(vpx_codec_alg_priv_t *ctx,
                                         const struct vp9_extracfg *extra_cfg) {
   const vpx_codec_err_t res = validate_config(ctx, &ctx->cfg, extra_cfg);
-  if (res == VPX_CODEC_OK) {
-    ctx->extra_cfg = *extra_cfg;
-    set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
-    set_twopass_params_from_config(&ctx->cfg, ctx->cpi);
-    vp9_change_config(ctx->cpi, &ctx->oxcf);
+  if (res != VPX_CODEC_OK) return res;
+
+  if (setjmp(ctx->cpi->common.error.jmp)) {
+    const vpx_codec_err_t codec_err =
+        update_error_state(ctx, &ctx->cpi->common.error);
+    ctx->cpi->common.error.setjmp = 0;
+    vpx_clear_system_state();
+    assert(codec_err != VPX_CODEC_OK);
+    return codec_err;
   }
-  return res;
+  ctx->cpi->common.error.setjmp = 1;
+  ctx->extra_cfg = *extra_cfg;
+  set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
+  set_twopass_params_from_config(&ctx->cfg, ctx->cpi);
+  vp9_change_config(ctx->cpi, &ctx->oxcf);
+  ctx->cpi->common.error.setjmp = 0;
+  return VPX_CODEC_OK;
 }
 
 static vpx_codec_err_t ctrl_set_cpuused(vpx_codec_alg_priv_t *ctx,
@@ -1425,6 +1435,11 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
   memset(&pkt, 0, sizeof(pkt));
 
   if (cpi == NULL) return VPX_CODEC_INVALID_PARAM;
+  if (cpi->realloc_pending) {
+    ctx->base.err_detail =
+        "Encoder buffers are incomplete after a failed configuration change";
+    return VPX_CODEC_ERROR;
+  }
 
   cpi->last_coded_width = ctx->oxcf.width;
   cpi->last_coded_height = ctx->oxcf.height;

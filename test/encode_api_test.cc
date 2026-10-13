@@ -3643,6 +3643,44 @@ TEST(EncodeAPI, ConfigResizeAllocFailureVp9) {
 
   EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
+
+// After a configuration change fails to allocate the larger buffers, the
+// encoder must refuse to encode until a later configuration change succeeds,
+// and then encode normally.
+TEST(EncodeAPI, ConfigResizeAllocFailureRecoveryVp9) {
+  constexpr auto *iface = &vpx_codec_vp9_cx_algo;
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  EXPECT_NO_FATAL_FAILURE(InitCodec(*iface, 64, 64, &enc, &cfg));
+
+  vpx_image_t *img = CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, 64, 64);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  vpx_codec_enc_cfg_t large_cfg = cfg;
+  large_cfg.g_w = 46340;
+  large_cfg.g_h = 46340;
+  EXPECT_EQ(vpx_codec_enc_config_set(&enc, &large_cfg), VPX_CODEC_MEM_ERROR);
+  EXPECT_EQ(vpx_codec_encode(&enc, img, 1, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_ERROR);
+  // Setting the same size again retries the reallocation instead of treating
+  // the size as already applied.
+  EXPECT_EQ(vpx_codec_enc_config_set(&enc, &large_cfg), VPX_CODEC_MEM_ERROR);
+  EXPECT_EQ(vpx_codec_encode(&enc, img, 1, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_ERROR);
+
+  ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  for (int i = 2; i < 5; ++i) {
+    EXPECT_EQ(vpx_codec_encode(&enc, img, i, 1, 0, VPX_DL_REALTIME),
+              VPX_CODEC_OK);
+  }
+  vpx_img_free(img);
+
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
 #endif  // SIZE_MAX <= UINT32_MAX
 
 // Encode one pass VBR with nonzero-lookahead, with resize and realtime mode.
