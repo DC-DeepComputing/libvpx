@@ -1713,11 +1713,8 @@ static vpx_codec_err_t ctrl_set_reference(vpx_codec_alg_priv_t *ctx,
     }
 
     image2yuvconfig(&frame->img, &sd);
-    if (vp9_set_reference_enc(
-            ctx->cpi, ref_frame_to_vp9_reframe(frame->frame_type), &sd)) {
-      return VPX_CODEC_ERROR;
-    }
-    return VPX_CODEC_OK;
+    return vp9_set_reference_enc(
+        ctx->cpi, ref_frame_to_vp9_reframe(frame->frame_type), &sd);
   }
   return VPX_CODEC_INVALID_PARAM;
 }
@@ -1736,11 +1733,8 @@ static vpx_codec_err_t ctrl_copy_reference(vpx_codec_alg_priv_t *ctx,
     }
 
     image2yuvconfig(&frame->img, &sd);
-    if (vp9_copy_reference_enc(
-            ctx->cpi, ref_frame_to_vp9_reframe(frame->frame_type), &sd)) {
-      return VPX_CODEC_ERROR;
-    }
-    return VPX_CODEC_OK;
+    return vp9_copy_reference_enc(
+        ctx->cpi, ref_frame_to_vp9_reframe(frame->frame_type), &sd);
   }
   return VPX_CODEC_INVALID_PARAM;
 }

@@ -959,11 +959,18 @@ int vp9_use_as_reference(VP9_COMP *cpi, int ref_frame_flags);
 
 void vp9_update_reference(VP9_COMP *cpi, int ref_frame_flags);
 
-int vp9_copy_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
-                           YV12_BUFFER_CONFIG *sd);
+// Copies the reference frame selected by ref_frame_flag into sd. Returns
+// VPX_CODEC_INVALID_PARAM if sd does not match the dimensions and bit depth of
+// the reference frame, VPX_CODEC_ERROR if there is no such reference frame.
+vpx_codec_err_t vp9_copy_reference_enc(VP9_COMP *cpi,
+                                       VP9_REFFRAME ref_frame_flag,
+                                       YV12_BUFFER_CONFIG *sd);
 
-int vp9_set_reference_enc(VP9_COMP *cpi, VP9_REFFRAME ref_frame_flag,
-                          YV12_BUFFER_CONFIG *sd);
+// Replaces the reference frame selected by ref_frame_flag with sd. Returns the
+// same errors as vp9_copy_reference_enc().
+vpx_codec_err_t vp9_set_reference_enc(VP9_COMP *cpi,
+                                      VP9_REFFRAME ref_frame_flag,
+                                      const YV12_BUFFER_CONFIG *sd);
 
 int vp9_update_entropy(VP9_COMP *cpi, int update);
 
