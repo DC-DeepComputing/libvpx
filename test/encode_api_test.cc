@@ -3929,6 +3929,71 @@ TEST(EncodeAPI, ConfigResizeAllocFailureVp9) {
 
   EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
+
+// After a configuration change fails to allocate the larger buffers, the
+// encoder must refuse to encode, and to run the controls that use those
+// buffers, until a later configuration change succeeds. It then encodes
+// normally, starting with the key frame that the failed change requested.
+TEST(EncodeAPI, ConfigResizeAllocFailureRecoveryVp9) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  EXPECT_NO_FATAL_FAILURE(InitCodec(*iface, 64, 64, &enc, &cfg));
+
+  vpx_image_t *img = CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, 64, 64);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  vpx_codec_enc_cfg_t large_cfg = cfg;
+  large_cfg.g_w = 46340;
+  large_cfg.g_h = 46340;
+  EXPECT_EQ(vpx_codec_enc_config_set(&enc, &large_cfg), VPX_CODEC_MEM_ERROR);
+  EXPECT_EQ(vpx_codec_encode(&enc, img, 1, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_ERROR);
+
+  vpx_scaling_mode_t mode = { VP8E_NORMAL, VP8E_NORMAL };
+  EXPECT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode),
+            VPX_CODEC_ERROR);
+  unsigned char map[4 * 4] = {};
+  vpx_active_map_t active_map = { map, 4, 4 };
+  EXPECT_EQ(vpx_codec_control(&enc, VP8E_SET_ACTIVEMAP, &active_map),
+            VPX_CODEC_ERROR);
+  EXPECT_EQ(vpx_codec_control(&enc, VP9E_GET_ACTIVEMAP, &active_map),
+            VPX_CODEC_ERROR);
+  vpx_roi_map_t roi = {};
+  EXPECT_EQ(vpx_codec_control(&enc, VP9E_SET_ROI_MAP, &roi), VPX_CODEC_ERROR);
+  EXPECT_EQ(vpx_codec_control(&enc, VP9E_SET_RTC_EXTERNAL_RATECTRL, 1),
+            VPX_CODEC_ERROR);
+
+  // Setting the same size again retries the reallocation instead of treating
+  // the size as already applied.
+  EXPECT_EQ(vpx_codec_enc_config_set(&enc, &large_cfg), VPX_CODEC_MEM_ERROR);
+  EXPECT_EQ(vpx_codec_encode(&enc, img, 1, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_ERROR);
+
+  ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  for (int i = 2; i < 5; ++i) {
+    EXPECT_EQ(vpx_codec_encode(&enc, img, i, 1, 0, VPX_DL_REALTIME),
+              VPX_CODEC_OK);
+    const vpx_codec_cx_pkt_t *pkt;
+    vpx_codec_iter_t iter = nullptr;
+    int num_frames = 0;
+    while ((pkt = vpx_codec_get_cx_data(&enc, &iter)) != nullptr) {
+      if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) continue;
+      ++num_frames;
+      if (i == 2) {
+        EXPECT_NE(pkt->data.frame.flags & VPX_FRAME_IS_KEY, 0u);
+      }
+    }
+    EXPECT_EQ(num_frames, 1);
+  }
+  vpx_img_free(img);
+
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
 #endif  // SIZE_MAX <= UINT32_MAX
 
 // Encode one pass VBR with nonzero-lookahead, with resize and realtime mode.
