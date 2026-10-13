@@ -3254,6 +3254,122 @@ TEST(EncodeAPI, SvcTestInvalidInputs) {
   ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
 
+// With spatial layers, the data of a lower layer can be kept as pending data
+// from one vpx_codec_encode() call to the next: here the first key frame of
+// the base layer takes more than half of the output buffer, so the call
+// returns before the top layer is encoded. Increase the frame size before the
+// next call so that it reallocates the output buffer.
+TEST(EncodeAPI, SvcPendingDataAfterResizeVp9) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 128;
+  cfg.g_h = 336;
+  cfg.g_lag_in_frames = 0;
+  cfg.g_pass = VPX_RC_ONE_PASS;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.rc_target_bitrate = 100;
+  cfg.g_timebase.num = 1;
+  cfg.g_timebase.den = 30;
+  cfg.ss_number_layers = 2;
+  cfg.ts_number_layers = 2;
+  cfg.ts_periodicity = 2;
+  cfg.ts_rate_decimator[0] = 2;
+  cfg.ts_rate_decimator[1] = 1;
+  cfg.ts_layer_id[0] = 0;
+  cfg.ts_layer_id[1] = 1;
+  cfg.temporal_layering_mode = VP9E_TEMPORAL_LAYERING_MODE_0101;
+  cfg.ss_target_bitrate[0] = 34;
+  cfg.ss_target_bitrate[1] = 67;
+  cfg.layer_target_bitrate[0] = 17;
+  cfg.layer_target_bitrate[1] = 34;
+  cfg.layer_target_bitrate[2] = 33;
+  cfg.layer_target_bitrate[3] = 67;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 7), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC, 1), VPX_CODEC_OK);
+
+  libvpx_test::ACMRandom rnd;
+  auto fill_random = [&rnd](vpx_image_t *img) {
+    for (int plane = 0; plane < 3; ++plane) {
+      const int w = plane ? (img->d_w + 1) >> 1 : img->d_w;
+      const int h = plane ? (img->d_h + 1) >> 1 : img->d_h;
+      for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+          img->planes[plane][y * img->stride[plane] + x] = rnd.Rand8();
+        }
+      }
+    }
+  };
+  vpx_image_t *image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  vpx_codec_pts_t pts = 0;
+  fill_random(image);
+  ASSERT_EQ(vpx_codec_encode(&enc, image, pts++, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+  vpx_codec_iter_t iter = nullptr;
+  while (vpx_codec_get_cx_data(&enc, &iter) != nullptr) {
+  }
+  vpx_img_free(image);
+
+  cfg.g_w = 320;
+  cfg.g_h = 240;
+  ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  image = CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  fill_random(image);
+  ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+  // The pending base layer is output with this frame.
+  iter = nullptr;
+  const vpx_codec_cx_pkt_t *pkt = vpx_codec_get_cx_data(&enc, &iter);
+  ASSERT_NE(pkt, nullptr);
+  EXPECT_EQ(pkt->kind, VPX_CODEC_CX_FRAME_PKT);
+  vpx_img_free(image);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// If vpx_codec_encode() reallocates the output buffer and then fails,
+// vpx_codec_get_cx_data() must not return the packets of the previous call,
+// which point into the old buffer.
+TEST(EncodeAPI, NoStalePacketsAfterFailedEncodeVp9) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 64;
+  cfg.g_h = 64;
+  cfg.g_lag_in_frames = 0;
+  cfg.g_pass = VPX_RC_ONE_PASS;
+  // With this timebase a duration of 2000 is rejected as too big in
+  // good quality mode.
+  cfg.g_timebase.num = 1000000000;
+  cfg.g_timebase.den = 999999999;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  vpx_image_t *image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, image, 0, 1, 0, VPX_DL_GOOD_QUALITY),
+            VPX_CODEC_OK);
+  vpx_codec_iter_t iter = nullptr;
+  ASSERT_NE(vpx_codec_get_cx_data(&enc, &iter), nullptr);
+  vpx_img_free(image);
+
+  cfg.g_w = 320;
+  cfg.g_h = 240;
+  ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  image = CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, image, 1, 2000, 0, VPX_DL_GOOD_QUALITY),
+            VPX_CODEC_INVALID_PARAM);
+  iter = nullptr;
+  EXPECT_EQ(vpx_codec_get_cx_data(&enc, &iter), nullptr);
+  vpx_img_free(image);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
 TEST(EncodeAPI, LargeDimensionsTokenAllocOverflow) {
   // To trigger the signed integer overflow, we need:
   // aligned_mb_rows * aligned_mb_cols * 772 > INT_MAX (2147483647)
