@@ -2100,6 +2100,9 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
   RATE_CONTROL *const rc = &cpi->rc;
   int last_w = cpi->oxcf.width;
   int last_h = cpi->oxcf.height;
+  // Set if an earlier call failed while reallocating the frame size dependent
+  // buffers. They are then redone here regardless of the requested size.
+  const int retry_realloc = cpi->realloc_pending;
 
   vp9_init_quantizer(cpi);
   if (cm->profile != oxcf->profile) cm->profile = oxcf->profile;
@@ -2162,14 +2165,17 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     cm->render_width = cpi->oxcf.width;
     cm->render_height = cpi->oxcf.height;
   }
-  if (last_w != cpi->oxcf.width || last_h != cpi->oxcf.height) {
+  if (retry_realloc || last_w != cpi->oxcf.width ||
+      last_h != cpi->oxcf.height) {
     cm->width = cpi->oxcf.width;
     cm->height = cpi->oxcf.height;
     cpi->external_resize = 1;
+    cpi->realloc_pending = 1;
   }
 
-  if (cpi->initial_width && cpi->initial_height &&
-      (cm->width > cpi->initial_width || cm->height > cpi->initial_height)) {
+  if (retry_realloc ||
+      (cpi->initial_width && cpi->initial_height &&
+       (cm->width > cpi->initial_width || cm->height > cpi->initial_height))) {
     vp9_free_context_buffers(cm);
     vp9_free_pc_tree(&cpi->td);
     vpx_free(cpi->mbmi_ext_base);
@@ -2183,11 +2189,12 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     cpi->external_resize = 0;
   }
 
-  if (cm->current_video_frame == 0 || last_w != cpi->oxcf.width ||
-      last_h != cpi->oxcf.height)
+  if (cm->current_video_frame == 0 || retry_realloc ||
+      last_w != cpi->oxcf.width || last_h != cpi->oxcf.height)
     update_frame_size(cpi);
 
-  if (last_w != cpi->oxcf.width || last_h != cpi->oxcf.height) {
+  if (retry_realloc || last_w != cpi->oxcf.width ||
+      last_h != cpi->oxcf.height) {
     int svc_alloc_mi_area = cm->mi_rows * cm->mi_cols;
     if (cpi->svc.number_spatial_layers > 1 && cpi->initial_width &&
         cpi->initial_height) {
@@ -2252,6 +2259,7 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     cpi->count_lastgolden_frame_usage = NULL;
     rc->rc_1_frame = 0;
     rc->rc_2_frame = 0;
+    cpi->realloc_pending = 0;
   }
 
   if ((cpi->svc.number_temporal_layers > 1) ||
