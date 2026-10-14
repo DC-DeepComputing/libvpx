@@ -1620,6 +1620,9 @@ void vp9_init_tpl_buffer(VP9_COMP *cpi) {
 
   // TODO(jingning): Reduce the actual memory use for tpl model build up.
   for (frame = 0; frame < MAX_ARF_GOP_SIZE; ++frame) {
+    // The stats are computed for the current frame size.
+    cpi->tpl_stats[frame].mi_rows = cm->mi_rows;
+    cpi->tpl_stats[frame].mi_cols = cm->mi_cols;
     if (cpi->tpl_stats[frame].width >= mi_cols &&
         cpi->tpl_stats[frame].height >= mi_rows &&
         cpi->tpl_stats[frame].tpl_stats_ptr)
@@ -1647,8 +1650,6 @@ void vp9_init_tpl_buffer(VP9_COMP *cpi) {
     cpi->tpl_stats[frame].width = mi_cols;
     cpi->tpl_stats[frame].height = mi_rows;
     cpi->tpl_stats[frame].stride = mi_cols;
-    cpi->tpl_stats[frame].mi_rows = cm->mi_rows;
-    cpi->tpl_stats[frame].mi_cols = cm->mi_cols;
   }
 
   for (frame = 0; frame < REF_FRAMES; ++frame) {

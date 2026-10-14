@@ -877,6 +877,9 @@ typedef struct VP9_COMP {
   uint8_t *prev_variance_low;
   uint8_t *copied_frame_cnt;
   uint8_t max_copied_frame;
+  // The mi grid of the frame the copy-partition data above was saved for.
+  int copy_partition_mi_rows;
+  int copy_partition_mi_cols;
   // If the last frame is dropped, we don't copy partition.
   uint8_t last_frame_dropped;
 
@@ -980,6 +983,23 @@ int vp9_set_size_literal(VP9_COMP *cpi, unsigned int width,
                          unsigned int height);
 
 void vp9_set_svc(VP9_COMP *cpi, int use_svc);
+
+// Gets the mi grid of the largest frame size the encoder codes without
+// reallocating its buffers, cpi->initial_width x cpi->initial_height.
+// VP8E_SET_SCALEMODE and dynamic resizing change the coded frame size within
+// that limit, so buffers indexed by a position in the current frame are sized
+// from it.
+void vp9_get_initial_mi_size(const VP9_COMP *cpi, int *mi_rows, int *mi_stride);
+
+// Returns the number of entries of a map with one entry per 64x64 superblock,
+// for the frame size of vp9_get_initial_mi_size().
+size_t vp9_get_sb_map_size(const VP9_COMP *cpi);
+
+// Returns the TPL stats of the frame at |gf_group_index| in the GF group, or
+// NULL if there are none for the current frame size. The stats of a GF group
+// are computed at the frame size of its first frame, and the coded frame size
+// may change within the group.
+const TplDepFrame *vp9_get_tpl_frame(const VP9_COMP *cpi, int gf_group_index);
 
 // Check for resetting the rc flags (rc_1_frame, rc_2_frame) if the
 // configuration change has a large change in avg_frame_bandwidth.
