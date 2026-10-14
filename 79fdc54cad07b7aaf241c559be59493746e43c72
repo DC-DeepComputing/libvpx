@@ -37,6 +37,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "c0b79e92_dd85558d",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-14T01:37:07Z",
+      "side": 1,
+      "message": "Taking a closer look, I think I was wrong. I now believe the libvpx encoder supports a flipped input image, even though those two lines in `image2yuvconfig()` do not.\n\nThe input image to the libvpx encoder is converted twice.\n\nThe first conversion is done by the `image2yuvconfig()` function.\n\nThe second conversion is done by the `vp9_copy_and_extend_frame()` function.\n\nAfter the second conversion, the input image, if originally flipped, is flipped back. So subsequently the libvpx encoder always deals with a non-flipped input image.",
+      "parentUuid": "fabb0e1a_b5f769fb",
+      "revId": "79fdc54cad07b7aaf241c559be59493746e43c72",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "e8c8733e_72060378",
         "filename": "vp9/vp9_cx_iface.c",
         "patchSetId": 2
@@ -82,6 +100,24 @@
       "writtenOn": "2026-10-13T21:34:17Z",
       "side": 1,
       "message": "This code assumes `yv12-\u003ey_stride` is positive. And `yv12-\u003ey_stride` is equal to half of `img-\u003estride[VPX_PLANE_Y]` (see line 100). So this code assumes `img-\u003estride[VPX_PLANE_Y]` is positive.",
+      "revId": "79fdc54cad07b7aaf241c559be59493746e43c72",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b436dc0c_c2b02319",
+        "filename": "vp9/vp9_iface_common.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-14T01:37:07Z",
+      "side": 1,
+      "message": "I took a closer look. I found that the `yv12-\u003eborder` value set here seems to be unused. This may be why things still work for a flipped input image even though `yv12-\u003eborder` is negative.\n\nWe probably should just set `yv12-\u003eborder` to 0 in this function.",
+      "parentUuid": "c468b71b_5e8bf089",
       "revId": "79fdc54cad07b7aaf241c559be59493746e43c72",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
