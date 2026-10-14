@@ -2038,31 +2038,30 @@ static void realloc_segmentation_maps(VP9_COMP *cpi) {
                   vpx_calloc(cm->mi_rows * cm->mi_cols, 1));
 }
 
-static void alloc_copy_partition_data(VP9_COMP *cpi) {
-  VP9_COMMON *const cm = &cpi->common;
-  if (cpi->prev_partition == NULL) {
-    CHECK_MEM_ERROR(&cm->error, cpi->prev_partition,
-                    (BLOCK_SIZE *)vpx_calloc(cm->mi_stride * cm->mi_rows,
-                                             sizeof(*cpi->prev_partition)));
-  }
-  if (cpi->prev_segment_id == NULL) {
-    CHECK_MEM_ERROR(
-        &cm->error, cpi->prev_segment_id,
-        (int8_t *)vpx_calloc((cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1),
-                             sizeof(*cpi->prev_segment_id)));
-  }
-  if (cpi->prev_variance_low == NULL) {
-    CHECK_MEM_ERROR(&cm->error, cpi->prev_variance_low,
-                    (uint8_t *)vpx_calloc(
-                        (cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1) * 25,
-                        sizeof(*cpi->prev_variance_low)));
-  }
-  if (cpi->copied_frame_cnt == NULL) {
-    CHECK_MEM_ERROR(
-        &cm->error, cpi->copied_frame_cnt,
-        (uint8_t *)vpx_calloc((cm->mi_stride >> 3) * ((cm->mi_rows >> 3) + 1),
-                              sizeof(*cpi->copied_frame_cnt)));
-  }
+void vp9_get_initial_mi_size(const VP9_COMP *cpi, int *mi_rows,
+                             int *mi_stride) {
+  const VP9_COMMON *const cm = &cpi->common;
+  int mi_cols;
+  vp9_set_mi_size(mi_rows, &mi_cols, mi_stride,
+                  VPXMAX(cm->width, cpi->initial_width),
+                  VPXMAX(cm->height, cpi->initial_height));
+}
+
+size_t vp9_get_sb_map_size(const VP9_COMP *cpi) {
+  int mi_rows, mi_stride;
+  vp9_get_initial_mi_size(cpi, &mi_rows, &mi_stride);
+  return (size_t)(mi_stride >> 3) * ((mi_rows >> 3) + 1);
+}
+
+const TplDepFrame *vp9_get_tpl_frame(const VP9_COMP *cpi, int gf_group_index) {
+  const VP9_COMMON *const cm = &cpi->common;
+  const TplDepFrame *tpl_frame;
+  if (gf_group_index < 0 || gf_group_index >= MAX_ARF_GOP_SIZE) return NULL;
+  tpl_frame = &cpi->tpl_stats[gf_group_index];
+  if (!tpl_frame->is_valid || tpl_frame->mi_rows != cm->mi_rows ||
+      tpl_frame->mi_cols != cm->mi_cols)
+    return NULL;
+  return tpl_frame;
 }
 
 static void free_copy_partition_data(VP9_COMP *cpi) {
@@ -2074,6 +2073,45 @@ static void free_copy_partition_data(VP9_COMP *cpi) {
   cpi->prev_variance_low = NULL;
   vpx_free(cpi->copied_frame_cnt);
   cpi->copied_frame_cnt = NULL;
+}
+
+// Allocates the copy-partition data if needed. The data is laid out by the mi
+// grid of the frame it was saved for; it is reset when the coded frame size
+// changes, and no superblock is copied until its partition is saved again.
+static void alloc_copy_partition_data(VP9_COMP *cpi) {
+  VP9_COMMON *const cm = &cpi->common;
+  const size_t sb_map_size = vp9_get_sb_map_size(cpi);
+  int grid_changed = 0;
+  if (cpi->copy_partition_mi_rows != cm->mi_rows ||
+      cpi->copy_partition_mi_cols != cm->mi_cols) {
+    grid_changed = cpi->copy_partition_mi_rows != 0;
+    free_copy_partition_data(cpi);
+    cpi->copy_partition_mi_rows = cm->mi_rows;
+    cpi->copy_partition_mi_cols = cm->mi_cols;
+  }
+  if (cpi->prev_partition == NULL) {
+    int mi_rows, mi_stride;
+    vp9_get_initial_mi_size(cpi, &mi_rows, &mi_stride);
+    CHECK_MEM_ERROR(&cm->error, cpi->prev_partition,
+                    (BLOCK_SIZE *)vpx_calloc((size_t)mi_stride * mi_rows,
+                                             sizeof(*cpi->prev_partition)));
+  }
+  if (cpi->prev_segment_id == NULL) {
+    CHECK_MEM_ERROR(
+        &cm->error, cpi->prev_segment_id,
+        (int8_t *)vpx_calloc(sb_map_size, sizeof(*cpi->prev_segment_id)));
+  }
+  if (cpi->prev_variance_low == NULL) {
+    CHECK_MEM_ERROR(&cm->error, cpi->prev_variance_low,
+                    (uint8_t *)vpx_calloc(sb_map_size * 25,
+                                          sizeof(*cpi->prev_variance_low)));
+  }
+  if (cpi->copied_frame_cnt == NULL) {
+    CHECK_MEM_ERROR(
+        &cm->error, cpi->copied_frame_cnt,
+        (uint8_t *)vpx_calloc(sb_map_size, sizeof(*cpi->copied_frame_cnt)));
+  }
+  if (grid_changed) memset(cpi->copied_frame_cnt, UINT8_MAX, sb_map_size);
 }
 
 #if CONFIG_VP9_TEMPORAL_DENOISING

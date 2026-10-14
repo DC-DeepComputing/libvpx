@@ -153,6 +153,8 @@ typedef struct {
   double mb_smooth_pct;
 
   FP_MB_FLOAT_STATS *fp_mb_float_stats;
+  // Number of entries allocated in fp_mb_float_stats.
+  int fp_mb_float_stats_size;
 
   // An indication of the content type of the current frame
   FRAME_CONTENT_TYPE fr_content_type;

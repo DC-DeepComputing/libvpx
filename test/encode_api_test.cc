@@ -3994,6 +3994,265 @@ TEST(EncodeAPI, VP9DenoiserPsnr) {
   ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
 #endif  // CONFIG_VP9_TEMPORAL_DENOISING
+
+// Encode the first frames scaled down with VP8E_SET_SCALEMODE, then return to
+// the configured size. Buffers allocated on the first frames must cover the
+// configured size.
+void ScaleModeUpAfterFirstFrame(int speed, vpx_rc_mode rc_mode, int lag,
+                                vpx_enc_pass pass = VPX_RC_ONE_PASS,
+                                unsigned int width = 320,
+                                unsigned int height = 240, int row_mt = 0) {
+  vpx_codec_ctx_t enc;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  cfg.g_w = width;
+  cfg.g_h = height;
+  cfg.g_threads = 1;
+  cfg.g_pass = pass;
+  const unsigned long deadline =
+      pass == VPX_RC_ONE_PASS ? VPX_DL_REALTIME : VPX_DL_GOOD_QUALITY;
+  cfg.g_lag_in_frames = lag;
+  cfg.rc_end_usage = rc_mode;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, speed), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_ROW_MT, row_mt), VPX_CODEC_OK);
+  vpx_scaling_mode_t mode = { VP8E_ONETWO, VP8E_ONETWO };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+
+  vpx_image_t *image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  libvpx_test::ACMRandom rnd;
+  int pts = 0;
+  for (int i = 0; i < 4; ++i, ++pts) {
+    for (unsigned int j = 0; j < width * height; ++j)
+      image->planes[0][j] = rnd.Rand8();
+    ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, deadline), VPX_CODEC_OK);
+  }
+  mode.h_scaling_mode = VP8E_NORMAL;
+  mode.v_scaling_mode = VP8E_NORMAL;
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  for (int i = 0; i < 8; ++i, ++pts) {
+    ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, deadline), VPX_CODEC_OK);
+  }
+  ASSERT_EQ(vpx_codec_encode(&enc, nullptr, 0, 0, 0, deadline), VPX_CODEC_OK);
+  vpx_img_free(image);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+TEST(EncodeAPI, Vp9ScaleModeUpCopyPartition) {
+  ScaleModeUpAfterFirstFrame(7, VPX_CBR, 0);
+  ScaleModeUpAfterFirstFrame(8, VPX_CBR, 0);
+  ScaleModeUpAfterFirstFrame(9, VPX_VBR, 0);
+}
+
+TEST(EncodeAPI, Vp9ScaleModeUpAltrefOnepass) {
+  ScaleModeUpAfterFirstFrame(5, VPX_VBR, 1);
+  ScaleModeUpAfterFirstFrame(6, VPX_VBR, 1);
+}
+
+TEST(EncodeAPI, Vp9ScaleModeUpRealtime720) {
+  for (int speed = 5; speed <= 9; ++speed) {
+    ScaleModeUpAfterFirstFrame(speed, VPX_CBR, 0, VPX_RC_ONE_PASS, 1280, 720);
+  }
+  ScaleModeUpAfterFirstFrame(5, VPX_VBR, 1, VPX_RC_ONE_PASS, 1280, 720);
+}
+
+// Codes the first frames at the configured size, then switches to half size
+// with VP8E_SET_SCALEMODE; the partition copy state must not be reused.
+TEST(EncodeAPI, Vp9ScaleModeDownRealtime720) {
+  constexpr unsigned int kWidth = 1280;
+  constexpr unsigned int kHeight = 720;
+  for (int speed = 7; speed <= 9; ++speed) {
+    vpx_codec_enc_cfg_t cfg;
+    ASSERT_EQ(vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0),
+              VPX_CODEC_OK);
+    cfg.g_w = kWidth;
+    cfg.g_h = kHeight;
+    cfg.g_threads = 1;
+    cfg.g_lag_in_frames = 0;
+    cfg.rc_end_usage = VPX_CBR;
+    vpx_codec_ctx_t enc;
+    ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+              VPX_CODEC_OK);
+    ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, speed), VPX_CODEC_OK);
+    vpx_image_t *image =
+        CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+    ASSERT_NE(image, nullptr);
+    libvpx_test::ACMRandom rnd;
+    int pts = 0;
+    for (int i = 0; i < 8; ++i, ++pts) {
+      for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+        image->planes[0][j] = rnd.Rand8();
+      }
+      ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, VPX_DL_REALTIME),
+                VPX_CODEC_OK);
+    }
+    vpx_scaling_mode_t mode = { VP8E_ONETWO, VP8E_ONETWO };
+    ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+    for (int i = 0; i < 8; ++i, ++pts) {
+      ASSERT_EQ(vpx_codec_encode(&enc, image, pts, 1, 0, VPX_DL_REALTIME),
+                VPX_CODEC_OK);
+    }
+    vpx_img_free(image);
+    ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+  }
+}
+
+TEST(EncodeAPI, Vp9ScaleModeUpFirstPass) {
+  ScaleModeUpAfterFirstFrame(0, VPX_VBR, 0, VPX_RC_FIRST_PASS, 1280, 720);
+}
+
+TEST(EncodeAPI, Vp9ScaleModeUpFirstPassRowMT) {
+  ScaleModeUpAfterFirstFrame(0, VPX_VBR, 0, VPX_RC_FIRST_PASS, 1280, 720,
+                             /*row_mt=*/1);
+}
+
+// Two-pass encode where the second pass codes the first frames scaled down
+// with VP8E_SET_SCALEMODE and then returns to the configured size.
+TEST(EncodeAPI, Vp9ScaleModeUpSecondPass) {
+  constexpr unsigned int kWidth = 1280;
+  constexpr unsigned int kHeight = 720;
+  constexpr int kFrames = 40;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  cfg.g_threads = 1;
+  cfg.g_lag_in_frames = 10;
+  cfg.rc_end_usage = VPX_VBR;
+  vpx_image_t *image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+  libvpx_test::ACMRandom rnd;
+
+  std::vector<uint8_t> stats;
+  vpx_codec_ctx_t enc;
+  cfg.g_pass = VPX_RC_FIRST_PASS;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  for (int i = 0; i < kFrames + 12; ++i) {
+    if (i < kFrames) {
+      for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+        image->planes[0][j] = rnd.Rand8();
+      }
+    }
+    ASSERT_EQ(vpx_codec_encode(&enc, i < kFrames ? image : nullptr, i, 1, 0,
+                               VPX_DL_GOOD_QUALITY),
+              VPX_CODEC_OK);
+    vpx_codec_iter_t iter = nullptr;
+    const vpx_codec_cx_pkt_t *pkt;
+    while ((pkt = vpx_codec_get_cx_data(&enc, &iter)) != nullptr) {
+      if (pkt->kind == VPX_CODEC_STATS_PKT) {
+        const uint8_t *p =
+            static_cast<const uint8_t *>(pkt->data.twopass_stats.buf);
+        stats.insert(stats.end(), p, p + pkt->data.twopass_stats.sz);
+      }
+    }
+  }
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+
+  cfg.g_pass = VPX_RC_LAST_PASS;
+  cfg.rc_twopass_stats_in.buf = stats.data();
+  cfg.rc_twopass_stats_in.sz = stats.size();
+  ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 4), VPX_CODEC_OK);
+  vpx_scaling_mode_t mode = { VP8E_ONETWO, VP8E_ONETWO };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  for (int i = 0; i < kFrames + 12; ++i) {
+    if (i == kFrames / 2) {
+      mode.h_scaling_mode = VP8E_NORMAL;
+      mode.v_scaling_mode = VP8E_NORMAL;
+      ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode),
+                VPX_CODEC_OK);
+    }
+    if (i < kFrames) {
+      for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+        image->planes[0][j] = rnd.Rand8();
+      }
+    }
+    ASSERT_EQ(vpx_codec_encode(&enc, i < kFrames ? image : nullptr, i, 1, 0,
+                               VPX_DL_GOOD_QUALITY),
+              VPX_CODEC_OK);
+  }
+  vpx_img_free(image);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// Two-pass VBR with rc_resize_allowed and no fixed scaled size: the encoder
+// may code key/golden/altref frames at a lower resolution on its own.
+TEST(EncodeAPI, Vp9TwoPassDynamicResize) {
+  constexpr unsigned int kWidth = 640;
+  constexpr unsigned int kHeight = 360;
+  constexpr int kFrames = 30;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  cfg.g_threads = 1;
+  cfg.g_lag_in_frames = 25;
+  cfg.rc_end_usage = VPX_VBR;
+  cfg.rc_target_bitrate = 5;
+  cfg.rc_max_quantizer = 40;
+  cfg.rc_resize_allowed = 1;
+  cfg.kf_max_dist = 30;
+  vpx_image_t *image =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(image, nullptr);
+
+  libvpx_test::ACMRandom rnd;
+  std::vector<uint8_t> stats;
+  vpx_codec_ctx_t enc;
+  cfg.g_pass = VPX_RC_FIRST_PASS;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  for (int i = 0; i < kFrames + 26; ++i) {
+    if (i < kFrames) {
+      for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+        image->planes[0][j] = rnd.Rand8();
+      }
+    }
+    ASSERT_EQ(vpx_codec_encode(&enc, i < kFrames ? image : nullptr, i, 1, 0,
+                               VPX_DL_GOOD_QUALITY),
+              VPX_CODEC_OK);
+    vpx_codec_iter_t iter = nullptr;
+    const vpx_codec_cx_pkt_t *pkt;
+    while ((pkt = vpx_codec_get_cx_data(&enc, &iter)) != nullptr) {
+      if (pkt->kind == VPX_CODEC_STATS_PKT) {
+        const uint8_t *p =
+            static_cast<const uint8_t *>(pkt->data.twopass_stats.buf);
+        stats.insert(stats.end(), p, p + pkt->data.twopass_stats.sz);
+      }
+    }
+  }
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+
+  rnd.Reset(0);
+  cfg.g_pass = VPX_RC_LAST_PASS;
+  cfg.rc_twopass_stats_in.buf = stats.data();
+  cfg.rc_twopass_stats_in.sz = stats.size();
+  ASSERT_EQ(vpx_codec_enc_init(&enc, vpx_codec_vp9_cx(), &cfg, 0),
+            VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 1), VPX_CODEC_OK);
+  for (int i = 0; i < kFrames + 26; ++i) {
+    if (i < kFrames) {
+      for (unsigned int j = 0; j < kWidth * kHeight; ++j) {
+        image->planes[0][j] = rnd.Rand8();
+      }
+    }
+    ASSERT_EQ(vpx_codec_encode(&enc, i < kFrames ? image : nullptr, i, 1, 0,
+                               VPX_DL_GOOD_QUALITY),
+              VPX_CODEC_OK);
+  }
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+  vpx_img_free(image);
+}
+
 #endif  // CONFIG_VP9_ENCODER
 
 }  // namespace

@@ -3620,14 +3620,11 @@ static int get_rdmult_delta(VP9_COMP *cpi, BLOCK_SIZE bsize, int mi_row,
   int dr = 0;
   double r0, rk, beta;
 
-  TplDepFrame *tpl_frame;
-  TplDepStats *tpl_stats;
+  const TplDepFrame *const tpl_frame = vp9_get_tpl_frame(cpi, gf_group_index);
+  const TplDepStats *tpl_stats;
   int tpl_stride;
 
-  if (gf_group_index >= MAX_ARF_GOP_SIZE) return orig_rdmult;
-  tpl_frame = &cpi->tpl_stats[gf_group_index];
-
-  if (tpl_frame->is_valid == 0) return orig_rdmult;
+  if (tpl_frame == NULL) return orig_rdmult;
   tpl_stats = tpl_frame->tpl_stats_ptr;
   tpl_stride = tpl_frame->stride;
 
@@ -3646,7 +3643,7 @@ static int get_rdmult_delta(VP9_COMP *cpi, BLOCK_SIZE bsize, int mi_row,
 
   for (row = mi_row; row < mi_row + mi_high; ++row) {
     for (col = mi_col; col < mi_col + mi_wide; ++col) {
-      TplDepStats *this_stats = &tpl_stats[row * tpl_stride + col];
+      const TplDepStats *this_stats = &tpl_stats[row * tpl_stride + col];
 
       if (row >= cpi->common.mi_rows || col >= cpi->common.mi_cols) continue;
 
@@ -5693,28 +5690,28 @@ static void encode_frame_internal(VP9_COMP *cpi) {
         !(cpi->oxcf.lag_in_frames > 0 && cpi->oxcf.rc_mode == VPX_VBR) &&
         !cpi->use_svc)
       cpi->ref_frame_flags &= (~VP9_GOLD_FLAG);
-  } else if (gf_group_index && gf_group_index < MAX_ARF_GOP_SIZE &&
-             cpi->sf.enable_tpl_model) {
-    TplDepFrame *tpl_frame = &cpi->tpl_stats[cpi->twopass.gf_group.index];
-    TplDepStats *tpl_stats = tpl_frame->tpl_stats_ptr;
+  } else if (gf_group_index && cpi->sf.enable_tpl_model) {
+    const TplDepFrame *const tpl_frame = vp9_get_tpl_frame(cpi, gf_group_index);
 
-    int tpl_stride = tpl_frame->stride;
-    int64_t intra_cost_base = 0;
-    int64_t mc_dep_cost_base = 0;
-    int row, col;
+    if (tpl_frame != NULL) {
+      const TplDepStats *const tpl_stats = tpl_frame->tpl_stats_ptr;
+      const int tpl_stride = tpl_frame->stride;
+      int64_t intra_cost_base = 0;
+      int64_t mc_dep_cost_base = 0;
+      int row, col;
 
-    for (row = 0; row < cm->mi_rows && tpl_frame->is_valid; ++row) {
-      for (col = 0; col < cm->mi_cols; ++col) {
-        TplDepStats *this_stats = &tpl_stats[row * tpl_stride + col];
-        intra_cost_base += this_stats->intra_cost;
-        mc_dep_cost_base += this_stats->mc_dep_cost;
+      for (row = 0; row < cm->mi_rows; ++row) {
+        for (col = 0; col < cm->mi_cols; ++col) {
+          const TplDepStats *this_stats = &tpl_stats[row * tpl_stride + col];
+          intra_cost_base += this_stats->intra_cost;
+          mc_dep_cost_base += this_stats->mc_dep_cost;
+        }
       }
-    }
 
-    vpx_clear_system_state();
+      vpx_clear_system_state();
 
-    if (tpl_frame->is_valid)
       cpi->rd.r0 = (double)intra_cost_base / mc_dep_cost_base;
+    }
   }
 
   for (MV_REFERENCE_FRAME ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME;
