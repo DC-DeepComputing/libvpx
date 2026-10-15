@@ -3606,8 +3606,23 @@ void vp9_scale_references(VP9_COMP *cpi) {
         ++buf->ref_count;
       }
     } else {
-      if (cpi->oxcf.pass != 0 || cpi->use_svc)
+      if (cpi->oxcf.pass != 0 || cpi->use_svc) {
         cpi->scaled_ref_idx[ref_frame - 1] = INVALID_IDX;
+      } else {
+        // A scaled reference kept from an earlier frame may still be used
+        // (e.g. LAST in choose_partitioning) even though this reference is
+        // not in ref_frame_flags. Release it if it no longer matches the
+        // current frame size.
+        const int buf_idx = cpi->scaled_ref_idx[ref_frame - 1];
+        if (buf_idx != INVALID_IDX) {
+          RefCntBuffer *const buf = &cm->buffer_pool->frame_bufs[buf_idx];
+          if (buf->buf.y_crop_width != cm->width ||
+              buf->buf.y_crop_height != cm->height) {
+            --buf->ref_count;
+            cpi->scaled_ref_idx[ref_frame - 1] = INVALID_IDX;
+          }
+        }
+      }
     }
   }
 }

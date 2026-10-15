@@ -3909,6 +3909,92 @@ TEST(EncodeAPI, ResizeRealtimeSourceSadOverflow) {
   ASSERT_EQ(vpx_codec_destroy(&codec), VPX_CODEC_OK);
 }
 
+void FillScaledRefTestFrame(vpx_image_t *img, int frame) {
+  for (unsigned int y = 0; y < img->d_h; ++y) {
+    for (unsigned int x = 0; x < img->d_w; ++x) {
+      img->planes[0][y * img->stride[0] + x] =
+          static_cast<uint8_t>((x + 2 * frame) ^ (y + frame));
+    }
+  }
+  for (int p = 1; p < 3; ++p) {
+    for (unsigned int y = 0; y < (img->d_h + 1) / 2; ++y) {
+      memset(img->planes[p] + y * img->stride[p], 128 + (frame & 7),
+             (img->d_w + 1) / 2);
+    }
+  }
+}
+
+// Encodes a frame at half size with VP8E_SET_SCALEMODE, then frames at full
+// size. The flags of the half-size frame and of the next frame are given.
+void EncodeScaleModeWithRefFlags(int width, int height,
+                                 vpx_enc_frame_flags_t scaled_frame_flags,
+                                 vpx_enc_frame_flags_t next_frame_flags) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = width;
+  cfg.g_h = height;
+  cfg.g_lag_in_frames = 0;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.rc_target_bitrate = 1000;
+
+  vpx_image_t *const img =
+      vpx_img_alloc(nullptr, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h, 1);
+  ASSERT_NE(img, nullptr);
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 6), VPX_CODEC_OK);
+  for (int i = 0; i < 6; ++i) {
+    vpx_scaling_mode_t mode = { VP8E_NORMAL, VP8E_NORMAL };
+    vpx_enc_frame_flags_t flags = 0;
+    if (i == 1) {
+      mode.h_scaling_mode = VP8E_ONETWO;
+      mode.v_scaling_mode = VP8E_ONETWO;
+      flags = scaled_frame_flags;
+    } else if (i == 2) {
+      flags = next_frame_flags;
+    }
+    ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+    FillScaledRefTestFrame(img, i);
+    ASSERT_EQ(vpx_codec_encode(&enc, img, i, 1, flags, VPX_DL_REALTIME),
+              VPX_CODEC_OK);
+    vpx_codec_iter_t iter = nullptr;
+    while (vpx_codec_get_cx_data(&enc, &iter) != nullptr) {
+    }
+  }
+  vpx_img_free(img);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+TEST(EncodeAPI, Vp9ScaleReferencesReleasesUnusedScaledRef) {
+  EncodeScaleModeWithRefFlags(
+      1280, 720,
+      VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF,
+      VP8_EFLAG_NO_REF_LAST);
+}
+
+TEST(EncodeAPI, Vp9ScaleReferencesReleasesUnusedScaledRefLarge) {
+  EncodeScaleModeWithRefFlags(
+      1920, 1920,
+      VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF,
+      VP8_EFLAG_NO_REF_LAST);
+}
+
+TEST(EncodeAPI, Vp9ScaleReferencesUnusedRefsAllFlags) {
+  EncodeScaleModeWithRefFlags(
+      1280, 720,
+      VP8_EFLAG_NO_UPD_LAST | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF,
+      VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_ARF);
+}
+
+TEST(EncodeAPI, Vp9ScaleReferencesUpdatedLastNotUsed) {
+  EncodeScaleModeWithRefFlags(1280, 720, 0, VP8_EFLAG_NO_REF_LAST);
+}
+
+TEST(EncodeAPI, Vp9ScaleReferencesNoFlags) {
+  EncodeScaleModeWithRefFlags(1280, 720, 0, 0);
+}
+
 #if CONFIG_VP9_TEMPORAL_DENOISING
 uint64_t CalcPlaneSse(const uint8_t *a, int stride_a, const uint8_t *b,
                       int stride_b, int width, int height) {
