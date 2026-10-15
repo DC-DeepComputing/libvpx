@@ -3882,6 +3882,15 @@ static void set_frame_size(VP9_COMP *cpi) {
       vp9_denoiser_free(&cpi->denoiser);
     }
     setup_denoiser_buffer(cpi);
+  } else if (cpi->denoiser.frame_buffer_initialized && denoise_svc(cpi)) {
+    // With SVC each denoised spatial layer has its own buffers, which must
+    // have the coded size of that layer. It changes with the layer scaling
+    // (VP9E_SET_SVC_PARAMETERS) and with dynamic resize.
+    const int layer =
+        cpi->svc.number_spatial_layers - 1 - cpi->svc.spatial_layer_id;
+    if (vp9_denoiser_realloc_svc_layer(cm, &cpi->denoiser, layer))
+      vpx_internal_error(&cm->error, VPX_CODEC_MEM_ERROR,
+                         "Failed to re-allocate denoiser for SVC");
   }
 #endif
 

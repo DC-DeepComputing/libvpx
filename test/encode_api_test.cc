@@ -3621,6 +3621,87 @@ TEST(EncodeAPI, Vp9DenoiserScaleModeIncrease) {
     ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
   }
 }
+
+// Encodes with |num_spatial_layers| spatial layers and the denoiser, then sets
+// the layer scaling factors 1/|new_scaling_den| with VP9E_SET_SVC_PARAMETERS.
+// The buffers of each denoised layer must follow the size of that layer.
+void VerifyVp9DenoiserSvcScaling(unsigned int width, unsigned int height,
+                                 int num_spatial_layers, int noise_sensitivity,
+                                 const int *scaling_den,
+                                 const int *new_scaling_den) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = width;
+  cfg.g_h = height;
+  cfg.g_timebase.num = 1;
+  cfg.g_timebase.den = 30;
+  cfg.g_lag_in_frames = 0;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.ss_number_layers = num_spatial_layers;
+  cfg.ts_number_layers = 1;
+  cfg.ts_rate_decimator[0] = 1;
+  cfg.rc_target_bitrate = 0;
+  for (int sl = 0; sl < num_spatial_layers; ++sl) {
+    cfg.layer_target_bitrate[sl] = 100 * (sl + 1);
+    cfg.rc_target_bitrate += cfg.layer_target_bitrate[sl];
+  }
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 6), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC, 1), VPX_CODEC_OK);
+  vpx_svc_extra_cfg_t svc_cfg = {};
+  for (int sl = 0; sl < num_spatial_layers; ++sl) {
+    svc_cfg.max_quantizers[sl] = 56;
+    svc_cfg.min_quantizers[sl] = 2;
+    svc_cfg.scaling_factor_num[sl] = 1;
+    svc_cfg.scaling_factor_den[sl] = scaling_den[sl];
+  }
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC_PARAMETERS, &svc_cfg),
+            VPX_CODEC_OK);
+  ASSERT_EQ(
+      vpx_codec_control(&enc, VP9E_SET_NOISE_SENSITIVITY, noise_sensitivity),
+      VPX_CODEC_OK);
+
+  vpx_codec_pts_t pts = 0;
+  EncodeVp9Frames(&enc, cfg, 5, &pts);
+  for (int sl = 0; sl < num_spatial_layers; ++sl) {
+    svc_cfg.scaling_factor_den[sl] = new_scaling_den[sl];
+  }
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC_PARAMETERS, &svc_cfg),
+            VPX_CODEC_OK);
+  EncodeVp9Frames(&enc, cfg, 5, &pts);
+
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+TEST(EncodeAPI, Vp9DenoiserSvcScalingIncrease) {
+  const int scaling_den[] = { 4, 2 };
+  const int new_scaling_den[] = { 2, 1 };
+  VerifyVp9DenoiserSvcScaling(640, 4096, 2, 1, scaling_den, new_scaling_den);
+}
+
+TEST(EncodeAPI, Vp9DenoiserSvcScalingDecrease) {
+  const int scaling_den[] = { 2, 1 };
+  const int new_scaling_den[] = { 4, 2 };
+  VerifyVp9DenoiserSvcScaling(320, 240, 2, 1, scaling_den, new_scaling_den);
+}
+
+TEST(EncodeAPI, Vp9DenoiserSvcTwoDenoisedLayers) {
+  const int scaling_den[] = { 4, 2, 1 };
+  VerifyVp9DenoiserSvcScaling(640, 4096, 3, 2, scaling_den, scaling_den);
+}
+
+TEST(EncodeAPI, Vp9DenoiserSvcTwoDenoisedLayersScalingIncrease) {
+  const int scaling_den[] = { 4, 4, 2 };
+  const int new_scaling_den[] = { 4, 2, 1 };
+  VerifyVp9DenoiserSvcScaling(640, 4096, 3, 2, scaling_den, new_scaling_den);
+}
+
+TEST(EncodeAPI, Vp9DenoiserSvcTopLayerScaled) {
+  const int scaling_den[] = { 4, 2 };
+  VerifyVp9DenoiserSvcScaling(1280, 720, 2, 1, scaling_den, scaling_den);
+}
 #endif  // CONFIG_VP9_TEMPORAL_DENOISING
 #endif  // CONFIG_VP9_ENCODER
 
