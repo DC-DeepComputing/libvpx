@@ -467,11 +467,12 @@ void vp9_denoiser_update_frame_info(
     int refresh_last_frame, int alt_fb_idx, int gld_fb_idx, int lst_fb_idx,
     int resized, int svc_refresh_denoiser_buffers, int second_spatial_layer) {
   const int shift = second_spatial_layer ? denoiser->num_ref_frames : 0;
+  const int layer = second_spatial_layer ? 1 : 0;
   // Copy source into denoised reference buffers on KEY_FRAME or
   // if the just encoded frame was resized. For SVC, copy source if the base
   // spatial layer was key frame.
   if (frame_type == KEY_FRAME || resized != 0 || denoiser->reset ||
-      svc_refresh_denoiser_buffers) {
+      svc_refresh_denoiser_buffers || denoiser->layer_refresh[layer]) {
     int i;
     // Start at 1 so as not to overwrite the INTRA_FRAME
     for (i = 1; i < denoiser->num_ref_frames; ++i) {
@@ -479,6 +480,7 @@ void vp9_denoiser_update_frame_info(
         copy_frame(&denoiser->running_avg_y[i + shift], &src);
     }
     denoiser->reset = 0;
+    denoiser->layer_refresh[layer] = 0;
     return;
   }
 
@@ -603,6 +605,57 @@ int vp9_denoiser_realloc_svc(VP9_COMMON *cm, VP9_DENOISER *denoiser,
   return 0;
 }
 
+static int has_coded_size(const VP9_COMMON *cm, const YV12_BUFFER_CONFIG *buf) {
+  return buf->y_crop_width == cm->width && buf->y_crop_height == cm->height;
+}
+
+static int alloc_coded_size(VP9_COMMON *cm, YV12_BUFFER_CONFIG *buf) {
+  return vpx_alloc_frame_buffer(buf, cm->width, cm->height, cm->subsampling_x,
+                                cm->subsampling_y,
+#if CONFIG_VP9_HIGHBITDEPTH
+                                cm->use_highbitdepth,
+#endif
+                                VP9_ENC_BORDER_IN_PIXELS, 0);
+}
+
+int vp9_denoiser_realloc_svc_layer(VP9_COMMON *cm, VP9_DENOISER *denoiser,
+                                   int layer) {
+  const int shift = layer * denoiser->num_ref_frames;
+  int i;
+  assert(layer >= 0 && layer < denoiser->num_layers);
+  // last_source is used for the noise estimation of the top layer.
+  if (layer == 0 && !has_coded_size(cm, &denoiser->last_source) &&
+      alloc_coded_size(cm, &denoiser->last_source)) {
+    vp9_denoiser_free(denoiser);
+    return 1;
+  }
+  if (has_coded_size(cm, &denoiser->mc_running_avg_y[layer])) return 0;
+  // The buffers of this layer were set up for another size of the layer.
+  // Allocate the ones in use again for the coded size and refresh them from
+  // the source.
+  for (i = 0; i < denoiser->num_ref_frames; ++i) {
+    YV12_BUFFER_CONFIG *const buf = &denoiser->running_avg_y[i + shift];
+    if (buf->buffer_alloc != NULL && alloc_coded_size(cm, buf)) {
+      vp9_denoiser_free(denoiser);
+      return 1;
+    }
+  }
+  if (alloc_coded_size(cm, &denoiser->mc_running_avg_y[layer])) {
+    vp9_denoiser_free(denoiser);
+    return 1;
+  }
+  denoiser->layer_refresh[layer] = 1;
+  return 0;
+}
+
+int vp9_denoiser_layer_refresh_pending(const VP9_COMP *const cpi) {
+  const VP9_DENOISER *const denoiser = &cpi->denoiser;
+  const int layer =
+      cpi->svc.number_spatial_layers - cpi->svc.spatial_layer_id - 1;
+  return layer >= 0 && layer < denoiser->num_layers &&
+         denoiser->layer_refresh[layer];
+}
+
 int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
                        int use_svc, int noise_sen, int width, int height,
                        int ssx, int ssy,
@@ -692,6 +745,8 @@ int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
   denoiser->denoising_level = kDenMedium;
   denoiser->prev_denoising_level = kDenMedium;
   denoiser->reset = 0;
+  denoiser->layer_refresh[0] = 0;
+  denoiser->layer_refresh[1] = 0;
   denoiser->current_denoiser_frame = 0;
   return 0;
 }
