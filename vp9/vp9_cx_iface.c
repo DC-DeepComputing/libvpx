@@ -319,6 +319,18 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
       int i;
       int n_packets_per_layer[VPX_SS_MAX_LAYERS] = { 0 };
 
+      /* A stats buffer with fewer than two packets per layer can never
+       * satisfy the per-layer check below, and would make the pointer
+       * arithmetic in the loop (buf + n_packets - ss_number_layers + i)
+       * reference memory before the buffer when
+       * n_packets < ss_number_layers. Reject it before any dereference.
+       */
+      if (n_packets < 2 * (int)cfg->ss_number_layers) {
+        ERROR(
+            "rc_twopass_stats_in requires at least two packets for each "
+            "layer.");
+      }
+
       stats = cfg->rc_twopass_stats_in.buf;
       for (i = 0; i < n_packets; ++i) {
         const int layer_id = (int)stats[i].spatial_layer_id;
