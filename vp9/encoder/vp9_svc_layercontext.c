@@ -417,24 +417,6 @@ void vp9_save_layer_context(VP9_COMP *const cpi) {
   }
 }
 
-#if !CONFIG_REALTIME_ONLY
-void vp9_init_second_pass_spatial_svc(VP9_COMP *cpi) {
-  SVC *const svc = &cpi->svc;
-  int i;
-
-  for (i = 0; i < svc->number_spatial_layers; ++i) {
-    TWO_PASS *const twopass = &svc->layer_context[i].twopass;
-
-    svc->spatial_layer_id = i;
-    vp9_init_second_pass(cpi);
-
-    twopass->total_stats.spatial_layer_id = i;
-    twopass->total_left_stats.spatial_layer_id = i;
-  }
-  svc->spatial_layer_id = 0;
-}
-#endif  // !CONFIG_REALTIME_ONLY
-
 void vp9_inc_frame_in_layer(VP9_COMP *const cpi) {
   LAYER_CONTEXT *const lc =
       &cpi->svc.layer_context[cpi->svc.spatial_layer_id *
