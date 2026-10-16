@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
 #include <cstdint>
 #include <new>
 #include <memory>
@@ -15,6 +16,7 @@
 #include "./vpx_config.h"
 
 #include "gtest/gtest.h"
+#include "test/acm_random.h"
 #include "test/codec_factory.h"
 #include "test/encode_test_driver.h"
 #include "test/util.h"
@@ -30,6 +32,8 @@
 #include "vpx_dsp/vpx_dsp_common.h"
 
 namespace {
+
+using libvpx_test::ACMRandom;
 
 constexpr int kShowFrameCount = 10;
 constexpr int kKeyframeQp = 10;
@@ -268,6 +272,114 @@ TEST_F(ExtRateCtrlTest, EncodeTest) {
 #if CONFIG_VP9_DECODER
   EXPECT_EQ(received_show_frame_count_, kShowFrameCount);
 #endif
+}
+
+constexpr int kNoiseFrameCount = 16;
+constexpr int kLongGopFrameCount = kNoiseFrameCount + 80;
+
+// Noise frames, which are coded with an ARF, followed by static frames, which
+// are coded as one long GOP without an ARF.
+class NoiseThenStaticVideoSource : public ::libvpx_test::DummyVideoSource {
+ public:
+  void Begin() override {
+    rnd_.Reset(ACMRandom::DeterministicSeed());
+    DummyVideoSource::Begin();
+  }
+
+ protected:
+  void FillFrame() override {
+    if (!img_) return;
+    if (frame_ < kNoiseFrameCount) {
+      for (size_t i = 0; i < raw_sz_; ++i) img_->img_data[i] = rnd_.Rand8();
+    } else {
+      memset(img_->img_data, 128, raw_sz_);
+    }
+  }
+
+  ACMRandom rnd_;
+};
+
+vpx_rc_status_t rc_long_gop_create_model(void * /*priv*/,
+                                         const vpx_rc_config_t * /*config*/,
+                                         vpx_rc_model_t *rate_ctrl_model_ptr) {
+  *rate_ctrl_model_ptr = nullptr;
+  return VPX_RC_OK;
+}
+
+vpx_rc_status_t rc_long_gop_send_firstpass_stats(
+    vpx_rc_model_t /*rate_ctrl_model*/,
+    const vpx_rc_firstpass_stats_t *first_pass_stats) {
+  EXPECT_EQ(first_pass_stats->num_frames, kLongGopFrameCount);
+  return VPX_RC_OK;
+}
+
+bool long_gop_received_tpl_stats = false;
+int long_gop_max_frame_gop_index = -1;
+
+vpx_rc_status_t rc_long_gop_send_tpl_gop_stats(
+    vpx_rc_model_t rate_ctrl_model, const VpxTplGopStats *tpl_gop_stats) {
+  long_gop_received_tpl_stats = true;
+  return rc_test_send_tpl_gop_stats(rate_ctrl_model, tpl_gop_stats);
+}
+
+vpx_rc_status_t rc_long_gop_get_encodeframe_decision(
+    vpx_rc_model_t /*rate_ctrl_model*/, const int frame_gop_index,
+    vpx_rc_encodeframe_decision_t *frame_decision) {
+  long_gop_max_frame_gop_index =
+      std::max(long_gop_max_frame_gop_index, frame_gop_index);
+  frame_decision->q_index = kLeafQp;
+  frame_decision->rdmult = kLeafQp * kLeafQp / 2;
+  frame_decision->delta_q_uv = 0;
+  return VPX_RC_OK;
+}
+
+vpx_rc_status_t rc_long_gop_delete_model(vpx_rc_model_t /*rate_ctrl_model*/) {
+  return VPX_RC_OK;
+}
+
+class ExtRateCtrlLongGopTest : public ::libvpx_test::EncoderTest,
+                               public ::testing::Test {
+ protected:
+  ExtRateCtrlLongGopTest() : EncoderTest(&::libvpx_test::kVP9) {}
+
+  ~ExtRateCtrlLongGopTest() override = default;
+
+  void SetUp() override {
+    InitializeConfig();
+    SetMode(::libvpx_test::kTwoPassGood);
+  }
+
+  void PreEncodeFrameHook(::libvpx_test::VideoSource *video,
+                          ::libvpx_test::Encoder *encoder) override {
+    if (video->frame() == 0) {
+      vpx_rc_funcs_t rc_funcs = {};
+      rc_funcs.rc_type = VPX_RC_QP;
+      rc_funcs.create_model = rc_long_gop_create_model;
+      rc_funcs.send_firstpass_stats = rc_long_gop_send_firstpass_stats;
+      rc_funcs.send_tpl_gop_stats = rc_long_gop_send_tpl_gop_stats;
+      rc_funcs.get_encodeframe_decision = rc_long_gop_get_encodeframe_decision;
+      rc_funcs.delete_model = rc_long_gop_delete_model;
+      encoder->Control(VP9E_SET_EXTERNAL_RATE_CONTROL, &rc_funcs);
+    }
+  }
+};
+
+// The static frames form a GOP longer than MAX_ARF_GOP_SIZE.
+// vp9_estimate_tpl_qp_gop() must limit its frame loop to the TPL stats it has.
+TEST_F(ExtRateCtrlLongGopTest, EstimateTplQpGopLongerThanMaxArfGopSize) {
+  cfg_.rc_target_bitrate = 1000;
+  cfg_.g_lag_in_frames = 25;
+  cfg_.kf_max_dist = 9999;
+
+  NoiseThenStaticVideoSource video;
+  video.SetSize(352, 288);
+  video.set_limit(kLongGopFrameCount);
+  long_gop_received_tpl_stats = false;
+  long_gop_max_frame_gop_index = -1;
+  ASSERT_NO_FATAL_FAILURE(RunLoop(&video));
+  EXPECT_TRUE(long_gop_received_tpl_stats);
+  // MAX_ARF_GOP_SIZE is 50.
+  EXPECT_GE(long_gop_max_frame_gop_index, 50);
 }
 
 }  // namespace
