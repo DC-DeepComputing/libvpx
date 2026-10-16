@@ -2204,14 +2204,16 @@ void vp9_change_config(struct VP9_COMP *cpi, const VP9EncoderConfig *oxcf) {
     CHECK_MEM_ERROR(&cm->error, cpi->skin_map,
                     vpx_calloc(svc_alloc_mi_area, sizeof(*cpi->skin_map)));
 
-    if (cpi->svc.number_spatial_layers > 1) {
 #if CONFIG_VP9_TEMPORAL_DENOISING
-      // Reset the denoiser for svc on the resize change.
-      if (cpi->oxcf.noise_sensitivity > 0) {
-        vp9_denoiser_free(&cpi->denoiser);
-        setup_denoiser_buffer(cpi);
-      }
+    // Reset the denoiser on external resize if not in dynamic resize state
+    // (dynamic resize resets the denoiser in set_frame_size()).
+    if (cpi->resize_state == ORIG) {
+      vp9_denoiser_free(&cpi->denoiser);
+      setup_denoiser_buffer(cpi);
+    }
 #endif
+
+    if (cpi->svc.number_spatial_layers > 1) {
       for (int sl = 0; sl < cpi->svc.number_spatial_layers; ++sl) {
         const int layer =
             LAYER_IDS_TO_IDX(sl, 0, cpi->svc.number_temporal_layers);
