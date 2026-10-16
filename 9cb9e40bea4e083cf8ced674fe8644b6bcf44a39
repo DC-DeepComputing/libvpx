@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0808f17d_0490670d",
+        "filename": "vp9/encoder/vp9_svc_layercontext.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-16T17:17:01Z",
+      "side": 1,
+      "message": "Also remove the `twopass` field.",
+      "revId": "9cb9e40bea4e083cf8ced674fe8644b6bcf44a39",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
