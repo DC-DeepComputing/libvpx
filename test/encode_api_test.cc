@@ -1214,6 +1214,40 @@ TEST(EncodeAPI, SetReferenceValidationVp9) {
 }
 #endif  // CONFIG_VP9_ENCODER
 
+#if CONFIG_VP9_ENCODER && !CONFIG_REALTIME_ONLY
+// A two-pass stats buffer holding fewer than two packets per spatial layer
+// can never pass validation. validate_config() used to compute
+// stats = buf + n_packets - ss_number_layers + i and dereference it before
+// establishing that bound, reading before the buffer when
+// n_packets < ss_number_layers. Under a sanitizer the read is reported as a
+// heap-buffer-overflow; without one, validation still fails with
+// INVALID_PARAM.
+TEST(EncodeAPI, ValidateConfigVp9ShortTwopassStats) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+
+  cfg.g_pass = VPX_RC_LAST_PASS;
+  cfg.ss_number_layers = VPX_SS_MAX_LAYERS;
+  cfg.ts_number_layers = 1;
+
+  FIRSTPASS_STATS *const stats =
+      static_cast<FIRSTPASS_STATS *>(calloc(2, sizeof(*stats)));
+  ASSERT_NE(stats, nullptr);
+  stats[0].count = 1.0;
+  stats[1].count = 1.0;
+  stats[0].spatial_layer_id = 0;
+  stats[1].spatial_layer_id = 0;
+  cfg.rc_twopass_stats_in.buf = stats;
+  cfg.rc_twopass_stats_in.sz = 2 * sizeof(*stats);
+
+  vpx_codec_ctx_t enc = {};
+  EXPECT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_INVALID_PARAM);
+
+  free(stats);
+}
+#endif  // CONFIG_VP9_ENCODER && !CONFIG_REALTIME_ONLY
+
 // Set up 2 spatial streams with 2 temporal layers per stream, and generate
 // invalid configuration by setting the temporal layer rate allocation
 // (ts_target_bitrate[]) to 0 for both layers. This should fail independent of
