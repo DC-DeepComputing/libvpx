@@ -16,6 +16,24 @@
       "message": "Also remove the `twopass` field.",
       "revId": "9cb9e40bea4e083cf8ced674fe8644b6bcf44a39",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "aa4ad232_5fde437f",
+        "filename": "vp9/encoder/vp9_svc_layercontext.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-16T17:21:50Z",
+      "side": 1,
+      "message": "Also need the following changes:\n\n```\ndiff --git a/vp9/encoder/vp9_svc_layercontext.c b/vp9/encoder/vp9_svc_layercontext.c\nindex 5328769f5..3aa724359 100644\n--- a/vp9/encoder/vp9_svc_layercontext.c\n+++ b/vp9/encoder/vp9_svc_layercontext.c\n@@ -346,7 +346,6 @@ void vp9_restore_layer_context(VP9_COMP *const cpi) {\n   const int old_ext_use_post_encode_drop \u003d cpi-\u003erc.ext_use_post_encode_drop;\n \n   cpi-\u003erc \u003d lc-\u003erc;\n-  cpi-\u003etwopass \u003d lc-\u003etwopass;\n   cpi-\u003eoxcf.target_bandwidth \u003d lc-\u003etarget_bandwidth;\n   cpi-\u003ealt_ref_source \u003d lc-\u003ealt_ref_source;\n   // Check if it is one_pass_cbr_svc mode and lc-\u003espeed \u003e 0 (real-time mode\n@@ -387,7 +386,6 @@ void vp9_save_layer_context(VP9_COMP *const cpi) {\n   LAYER_CONTEXT *const lc \u003d get_layer_context(cpi);\n \n   lc-\u003erc \u003d cpi-\u003erc;\n-  lc-\u003etwopass \u003d cpi-\u003etwopass;\n   lc-\u003etarget_bandwidth \u003d (int)oxcf-\u003etarget_bandwidth;\n   lc-\u003ealt_ref_source \u003d cpi-\u003ealt_ref_source;\n   lc-\u003eframe_qp \u003d cpi-\u003ecommon.base_qindex;\n```",
+      "parentUuid": "0808f17d_0490670d",
+      "revId": "9cb9e40bea4e083cf8ced674fe8644b6bcf44a39",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
