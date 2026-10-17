@@ -23,6 +23,7 @@
 #include "common/onyxc_int.h"
 #include "common/onyxd.h"
 #include "decoder/onyxd_int.h"
+#include "vpx_dsp/bytereader.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/system_state.h"
@@ -142,25 +143,24 @@ static vpx_codec_err_t vp8_peek_si_internal(const uint8_t *data,
      * 4 bytes:- including image width and height in the lowest 14 bits
      *           of each 2-byte value.
      */
-    uint8_t clear_buffer[10];
-    const uint8_t *clear = data;
-    if (decrypt_cb) {
-      int n = VPXMIN(sizeof(clear_buffer), data_sz);
-      decrypt_cb(decrypt_state, data, clear_buffer, n);
-      clear = clear_buffer;
-    }
+    struct vpx_byte_reader r;
+    uint8_t sync_code[3];
+    vpx_byte_reader_init(&r, data, data_sz, decrypt_cb, decrypt_state);
     si->is_kf = 0;
 
-    if (data_sz >= 10 && !(clear[0] & 0x01)) { /* I-Frame */
+    if (data_sz >= 10 && !(vpx_byte_reader_read_le(&r, 3) & 0x01)) {
+      /* I-Frame */
       si->is_kf = 1;
 
       /* vet via sync code */
-      if (clear[3] != 0x9d || clear[4] != 0x01 || clear[5] != 0x2a) {
+      vpx_byte_reader_read_bytes(&r, sync_code, sizeof(sync_code));
+      if (sync_code[0] != 0x9d || sync_code[1] != 0x01 ||
+          sync_code[2] != 0x2a) {
         return VPX_CODEC_UNSUP_BITSTREAM;
       }
 
-      si->w = (clear[6] | (clear[7] << 8)) & 0x3fff;
-      si->h = (clear[8] | (clear[9] << 8)) & 0x3fff;
+      si->w = vpx_byte_reader_read_le(&r, 2) & 0x3fff;
+      si->h = vpx_byte_reader_read_le(&r, 2) & 0x3fff;
 
       /*printf("w=%d, h=%d\n", si->w, si->h);*/
       if (!(si->h && si->w)) {

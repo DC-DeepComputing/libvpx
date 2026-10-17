@@ -18,6 +18,7 @@
 #include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
 #include "vpx_dsp/bitreader_buffer.h"
+#include "vpx_dsp/bytereader.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 
 #include "vp9/common/vp9_alloccommon.h"
@@ -368,21 +369,20 @@ static vpx_codec_err_t decoder_decode(vpx_codec_alg_priv_t *ctx,
 
   // Decode in serial mode.
   if (frame_count > 0) {
-    const uint8_t *const data_end = data + data_sz;
+    struct vpx_byte_reader r;
     int i;
 
+    vpx_byte_reader_init(&r, data, data_sz, NULL, NULL);
     for (i = 0; i < frame_count; ++i) {
-      const uint8_t *data_start_copy = data_start;
       const uint32_t frame_size = frame_sizes[i];
-      if (data_start < data || frame_size > (uint32_t)(data_end - data_start)) {
+      const uint8_t *frame = vpx_byte_reader_take(&r, frame_size);
+      if (frame == NULL) {
         set_error_detail(ctx, "Invalid frame size in index");
         return VPX_CODEC_CORRUPT_FRAME;
       }
 
-      res = decode_one(ctx, &data_start_copy, frame_size, user_priv);
+      res = decode_one(ctx, &frame, frame_size, user_priv);
       if (res != VPX_CODEC_OK) return res;
-
-      data_start += frame_size;
     }
   } else {
     const uint8_t *const data_end = data + data_sz;

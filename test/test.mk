@@ -98,6 +98,7 @@ LIBVPX_TEST_SRCS-$(CONFIG_VP9_DECODER) += vp9_skip_loopfilter_test.cc
 $(BUILD_PFX)third_party/libwebm/%.cc.o: CXXFLAGS += $(LIBWEBM_CXXFLAGS)
 endif
 
+LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += bytereader_test.cc
 LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += decode_api_test.cc
 LIBVPX_TEST_SRCS-$(CONFIG_DECODERS)    += test_vector_test.cc
 

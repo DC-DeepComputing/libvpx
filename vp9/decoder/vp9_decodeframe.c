@@ -17,10 +17,10 @@
 
 #include "vpx_dsp/bitreader_buffer.h"
 #include "vpx_dsp/bitreader.h"
+#include "vpx_dsp/bytereader.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/mem.h"
-#include "vpx_ports/mem_ops.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vpx_util/vpx_pthread.h"
 #include "vpx_util/vpx_thread.h"
@@ -1643,54 +1643,47 @@ static void setup_tile_info(VP9_COMMON *cm, struct vpx_read_bit_buffer *rb) {
   if (cm->log2_tile_rows) cm->log2_tile_rows += vpx_rb_read_bit(rb);
 }
 
-// Reads the next tile returning its size and adjusting '*data' accordingly
-// based on 'is_last'.
-static void get_tile_buffer(const uint8_t *const data_end, int is_last,
+// Reads the next tile from 'br'. All but the last tile are preceded by a 4-byte
+// big-endian size; the last tile takes the remaining data.
+static void get_tile_buffer(struct vpx_byte_reader *br, int is_last,
                             struct vpx_internal_error_info *error_info,
-                            const uint8_t **data, vpx_decrypt_cb decrypt_cb,
-                            void *decrypt_state, TileBuffer *buf) {
+                            TileBuffer *buf) {
   size_t size;
 
   if (!is_last) {
-    if (!read_is_valid(*data, 4, data_end))
+    if (vpx_byte_reader_bytes_left(br) < 4)
       vpx_internal_error(error_info, VPX_CODEC_CORRUPT_FRAME,
                          "Truncated packet or corrupt tile length");
 
-    if (decrypt_cb) {
-      uint8_t be_data[4];
-      decrypt_cb(decrypt_state, *data, be_data, 4);
-      size = mem_get_be32(be_data);
-    } else {
-      size = mem_get_be32(*data);
-    }
-    *data += 4;
+    size = vpx_byte_reader_read_be(br, 4);
 
-    if (size > (size_t)(data_end - *data))
+    if (size > vpx_byte_reader_bytes_left(br))
       vpx_internal_error(error_info, VPX_CODEC_CORRUPT_FRAME,
                          "Truncated packet or corrupt tile size");
   } else {
-    size = data_end - *data;
+    size = vpx_byte_reader_bytes_left(br);
   }
 
-  buf->data = *data;
+  buf->data = vpx_byte_reader_take(br, size);
   buf->size = size;
-
-  *data += size;
 }
 
 static void get_tile_buffers(VP9Decoder *pbi, const uint8_t *data,
                              const uint8_t *data_end, int tile_cols,
                              int tile_rows,
                              TileBuffer (*tile_buffers)[1 << 6]) {
+  struct vpx_byte_reader br;
   int r, c;
 
+  assert(data <= data_end);
+  vpx_byte_reader_init(&br, data, (size_t)(data_end - data), pbi->decrypt_cb,
+                       pbi->decrypt_state);
   for (r = 0; r < tile_rows; ++r) {
     for (c = 0; c < tile_cols; ++c) {
       const int is_last = (r == tile_rows - 1) && (c == tile_cols - 1);
       TileBuffer *const buf = &tile_buffers[r][c];
       buf->col = c;
-      get_tile_buffer(data_end, is_last, &pbi->common.error, &data,
-                      pbi->decrypt_cb, pbi->decrypt_state, buf);
+      get_tile_buffer(&br, is_last, &pbi->common.error, buf);
     }
   }
 }

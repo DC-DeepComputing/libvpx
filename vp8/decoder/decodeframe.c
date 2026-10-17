@@ -34,6 +34,7 @@
 #include "vp8/common/threading.h"
 #include "decoderthreading.h"
 #include "dboolhuff.h"
+#include "vpx_dsp/bytereader.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 
 #include <assert.h>
@@ -662,12 +663,9 @@ static void decode_mb_rows(VP8D_COMP *pbi) {
 
 static unsigned int read_partition_size(VP8D_COMP *pbi,
                                         const unsigned char *cx_size) {
-  unsigned char temp[3];
-  if (pbi->decrypt_cb) {
-    pbi->decrypt_cb(pbi->decrypt_state, cx_size, temp, 3);
-    cx_size = temp;
-  }
-  return cx_size[0] + (cx_size[1] << 8) + (cx_size[2] << 16);
+  struct vpx_byte_reader r;
+  vpx_byte_reader_init(&r, cx_size, 3, pbi->decrypt_cb, pbi->decrypt_state);
+  return vpx_byte_reader_read_le(&r, 3);
 }
 
 static int read_is_valid(const unsigned char *start, size_t len,
@@ -910,57 +908,57 @@ int vp8_decode_frame(VP8D_COMP *pbi) {
     pc->show_frame = 1;
     first_partition_length_in_bytes = 0;
   } else {
-    unsigned char clear_buffer[10];
-    const unsigned char *clear = data;
-    if (pbi->decrypt_cb) {
-      int n = (int)VPXMIN(sizeof(clear_buffer), data_sz);
-      pbi->decrypt_cb(pbi->decrypt_state, data, clear_buffer, n);
-      clear = clear_buffer;
-    }
+    struct vpx_byte_reader r;
+    unsigned int frame_tag;
+    vpx_byte_reader_init(&r, data, data_sz, pbi->decrypt_cb,
+                         pbi->decrypt_state);
 
-    pc->frame_type = (FRAME_TYPE)(clear[0] & 1);
-    pc->version = (clear[0] >> 1) & 7;
-    pc->show_frame = (clear[0] >> 4) & 1;
-    first_partition_length_in_bytes =
-        (clear[0] | (clear[1] << 8) | (clear[2] << 16)) >> 5;
+    frame_tag = vpx_byte_reader_read_le(&r, 3);
+    pc->frame_type = (FRAME_TYPE)(frame_tag & 1);
+    pc->version = (frame_tag >> 1) & 7;
+    pc->show_frame = (frame_tag >> 4) & 1;
+    first_partition_length_in_bytes = frame_tag >> 5;
 
     if (!pbi->ec_active && first_partition_length_in_bytes == 0) {
       vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
                          "Corrupt partition 0 length");
     }
 
-    data += 3;
-    clear += 3;
-
     vp8_setup_version(pc);
 
     if (pc->frame_type == KEY_FRAME) {
-      if (data_end - data >= 7) {
+      if (vpx_byte_reader_bytes_left(&r) >= 7) {
+        unsigned char sync_code[3];
+        unsigned int width, height;
         /* vet via sync code */
         /* When error concealment is enabled we should only check the sync
          * code if we have enough bits available
          */
-        if (clear[0] != 0x9d || clear[1] != 0x01 || clear[2] != 0x2a) {
+        vpx_byte_reader_read_bytes(&r, sync_code, sizeof(sync_code));
+        if (sync_code[0] != 0x9d || sync_code[1] != 0x01 ||
+            sync_code[2] != 0x2a) {
           vpx_internal_error(&pc->error, VPX_CODEC_UNSUP_BITSTREAM,
                              "Invalid frame sync code");
         }
 
-        pc->Width = (clear[3] | (clear[4] << 8)) & 0x3fff;
-        pc->horiz_scale = clear[4] >> 6;
-        pc->Height = (clear[5] | (clear[6] << 8)) & 0x3fff;
-        pc->vert_scale = clear[6] >> 6;
-        data += 7;
+        width = vpx_byte_reader_read_le(&r, 2);
+        height = vpx_byte_reader_read_le(&r, 2);
+        pc->Width = width & 0x3fff;
+        pc->horiz_scale = width >> 14;
+        pc->Height = height & 0x3fff;
+        pc->vert_scale = height >> 14;
       } else if (!pbi->ec_active) {
         vpx_internal_error(&pc->error, VPX_CODEC_CORRUPT_FRAME,
                            "Truncated key frame header");
       } else {
         /* Error concealment is active, clear the frame. */
-        data = data_end;
+        vpx_byte_reader_skip(&r, vpx_byte_reader_bytes_left(&r));
       }
     } else {
       xd->pre = *yv12_fb_new;
       xd->dst = *yv12_fb_new;
     }
+    data = vpx_byte_reader_ptr(&r);
   }
   if ((!pbi->decoded_key_frame && pc->frame_type != KEY_FRAME)) {
     return -1;

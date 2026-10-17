@@ -18,6 +18,7 @@
 
 #include "vpx/internal/vpx_codec_internal.h"
 #include "vpx/vpx_codec.h"
+#include "vpx_dsp/bytereader.h"
 #include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/system_state.h"
 #include "vpx_ports/vpx_once.h"
@@ -552,10 +553,13 @@ vpx_codec_err_t vp9_parse_superframe_index(const uint8_t *data, size_t data_sz,
   // not the associated matching marker byte at the front of the index we have
   // an invalid bitstream and need to return an error.
 
+  struct vpx_byte_reader r;
   uint8_t marker;
 
   assert(data_sz);
-  marker = read_marker(decrypt_cb, decrypt_state, data + data_sz - 1);
+  vpx_byte_reader_init(&r, data, data_sz, decrypt_cb, decrypt_state);
+  vpx_byte_reader_skip(&r, data_sz - 1);
+  marker = vpx_byte_reader_read_u8(&r);
   *count = 0;
 
   if ((marker & 0xe0) == 0xc0) {
@@ -568,34 +572,22 @@ vpx_codec_err_t vp9_parse_superframe_index(const uint8_t *data, size_t data_sz,
     if (data_sz < index_sz) return VPX_CODEC_CORRUPT_FRAME;
 
     {
-      const uint8_t marker2 =
-          read_marker(decrypt_cb, decrypt_state, data + data_sz - index_sz);
+      // Found a superframe index: the marker, |frames| sizes of |mag| bytes
+      // each, then the marker again.
+      uint32_t i;
+
+      vpx_byte_reader_init(&r, data, data_sz, decrypt_cb, decrypt_state);
+      vpx_byte_reader_skip(&r, data_sz - index_sz);
 
       // This chunk is marked as having a superframe index but doesn't have
       // the matching marker byte at the front of the index therefore it's an
       // invalid chunk.
-      if (marker != marker2) return VPX_CODEC_CORRUPT_FRAME;
-    }
-
-    {
-      // Found a valid superframe index.
-      uint32_t i, j;
-      const uint8_t *x = &data[data_sz - index_sz + 1];
-
-      // Frames has a maximum of 8 and mag has a maximum of 4.
-      uint8_t clear_buffer[32];
-      assert(sizeof(clear_buffer) >= frames * mag);
-      if (decrypt_cb) {
-        decrypt_cb(decrypt_state, x, clear_buffer, frames * mag);
-        x = clear_buffer;
-      }
+      if (vpx_byte_reader_read_u8(&r) != marker) return VPX_CODEC_CORRUPT_FRAME;
 
       for (i = 0; i < frames; ++i) {
-        uint32_t this_sz = 0;
-
-        for (j = 0; j < mag; ++j) this_sz |= ((uint32_t)(*x++)) << (j * 8);
-        sizes[i] = this_sz;
+        sizes[i] = vpx_byte_reader_read_le(&r, (int)mag);
       }
+      assert(!r.error && vpx_byte_reader_bytes_left(&r) == 1);
       *count = frames;
     }
   }

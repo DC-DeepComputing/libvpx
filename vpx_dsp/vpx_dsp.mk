@@ -47,6 +47,7 @@ DSP_SRCS-yes += bitreader.h
 DSP_SRCS-yes += bitreader.c
 DSP_SRCS-yes += bitreader_buffer.c
 DSP_SRCS-yes += bitreader_buffer.h
+DSP_SRCS-yes += bytereader.h
 endif
 
 # intra predictions
