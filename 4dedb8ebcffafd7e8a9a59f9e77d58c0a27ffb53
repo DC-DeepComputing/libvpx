@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "43e74ab9_94996907",
+        "filename": "vpx_dsp/arm/sad4d_neon_dotprod.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-10-18T05:49:47Z",
+      "side": 1,
+      "message": "This case is gcc specific as it sounds like clang is doing the right thing. If needed this can be generalized into something like what was added for sjpeg:\n\nhttps://github.com/webmproject/sjpeg/blob/31e6232145ff3b11206f5df743d1587ec4daa1eb/src/common.h#L38",
+      "revId": "4dedb8ebcffafd7e8a9a59f9e77d58c0a27ffb53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
