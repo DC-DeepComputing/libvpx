@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e9670ce2_c5f5e2f1",
+        "filename": "vp9/encoder/vp9_encoder.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2203,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-19T17:24:13Z",
+      "side": 1,
+      "message": "Two questions here:\n\n1. shouldn\u0027t this be still guarded by noise_sensitivity \u003e 0?\n2. Jetski says this specific condtion `resize_state \u003d\u003d ORIG` is not actually necessary - the test `TEST_P(DatarateOnePassCbrSvcSingleBR, OnePassCbrSvc1SL2TL_DenoiseResize` failed because of a bug in the test itself - it doesn\u0027t set `cfg.g_width` and `cfg.g_height` to 1280x720 initially even the test clip is a 720p.",
+      "range": {
+        "startLine": 2203,
+        "startChar": 0,
+        "endLine": 2203,
+        "endChar": 36
+      },
+      "revId": "3f2c0f1bcef06717a5436542bb03ed3e85d48264",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
