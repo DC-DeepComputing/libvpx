@@ -16,6 +16,24 @@
       "message": "Wan-Teh, I override the Verified label because the style check failure is caused by the clang-format upgrade. On main branch this CL was submitted https://chromium-review.git.corp.google.com/c/webm/libvpx/+/8596828\n\nWe can either cherry pick the above CL to m157 (and m156 as well) or override the Verified label on Marco\u0027s cherrypicks.",
       "revId": "6c3e96081802e0b2646b08aa5622555492e50d3b",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a4fd665d_3be22d4a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-19T21:40:51Z",
+      "side": 1,
+      "message": "Jerome: The \"apply clang-format-21\" CL is quite small. I suggest we cherry-pick it to m157 and m156.",
+      "parentUuid": "d88c2115_1f8e6df4",
+      "revId": "6c3e96081802e0b2646b08aa5622555492e50d3b",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
