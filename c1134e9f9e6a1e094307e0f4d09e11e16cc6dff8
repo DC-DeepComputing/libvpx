@@ -16,6 +16,24 @@
       "message": "\u003e If it lands, we may submit it to Google\u0027s Patch Rewards program, and we\u0027d be glad to share any reward with the maintainers.\n\nDo you have a PoC that this patch is fixing?",
       "revId": "c1134e9f9e6a1e094307e0f4d09e11e16cc6dff8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cdab18eb_5994ce70",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5243145
+      },
+      "writtenOn": "2026-10-19T01:05:22Z",
+      "side": 1,
+      "message": "No, there\u0027s no PoC: this isn\u0027t a fix for a known bug. It\u0027s proactive hardening. Each byte-aligned header read now does its own bounds check, with the pointer and remaining size kept together, so the parsing no longer relies on separate length checks staying in step with the reads. That\u0027s the kind of change Patch Rewards covers. Decoded output is unchanged.",
+      "parentUuid": "95ea9a9c_894414e8",
+      "revId": "c1134e9f9e6a1e094307e0f4d09e11e16cc6dff8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
