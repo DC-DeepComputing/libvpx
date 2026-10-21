@@ -1,0 +1,99 @@
+# Copyright (c) 2026 The WebM project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+agentic_review {
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    path_expression: "vpx_dsp/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/aggregate-simd-threshold-checks-with-max.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/avoid-function-pointers-in-inner-loops.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/avoid-gratuitous-loop-unrolling-in-simd-dsp.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/hoist-block-width-checks-outside-row-loops.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/hoist-simd-quantizer-parameter-widening-and-replicate-ac.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/omit-dead-simd-register-updates-on-final-loop-iteration.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefetch-relative-to-advancing-loop-pointers.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/reuse-intermediate-stack-buffers.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/specialize-simd-format-helpers-for-inlining.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/unroll-inner-row-loops-in-simd-dsp.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/use-aligned-simd-for-aligned-buffers.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?x86/.*"
+    path_expression: "vp9/(?:.*/)?x86/.*"
+    path_expression: "vpx_dsp/x86/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/avoid-64-bit-simd-loads-on-4-byte-rows.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefer-unpacklo-epi64-over-loadh-pi.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/use-cvtsi32-for-low-lane-scalar-initialization.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/vpx-dsp-prefer-storel-epi64-over-extract-epi32.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/avoid-wider-pointer-casts-for-simd-loads.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/break-neon-accumulator-dependency-chains.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefer-vbsl-for-neon-vector-selection.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefer-vst1-over-vst2-for-contiguous-stores.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*neon[^/]*"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "(?:.*/)?arm/.*"
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/combine-neon-multiply-and-accumulate-or-subtract.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vpx_dsp/fallback-adapters-for-neon-multi-vector-intrinsics.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/neon-contiguous-unaligned-loads-memcpy-vld1.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/use-mem-neon-load-store-helpers.md"
+  }
+  capability_groups {
+    path_expression: "vpx_dsp/ppc/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vpx_dsp/fuse-vec-pack-and-perm-powerpc.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/keep-neon-intermediate-sums-in-16-bit.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*_neon\\.[^/]*"
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vpx_dsp/match-neon-vector-reinterpret-signedness.md"
+  }
+  capability_groups {
+    path_expression: "vpx_dsp/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefer-do-while-for-nonzero-dsp-loops.md"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prune-sparse-idct-zero-columns.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vpx_dsp/prefer-neon-rounding-shifts.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "agents/knowledge_base/rules/vpx_dsp/use-128bit-neon-for-4x4-dotprod-blocks.md"
+  }
+}

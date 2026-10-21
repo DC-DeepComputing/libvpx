@@ -1,0 +1,37 @@
+# Copyright (c) 2026 The WebM project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+agentic_review {
+  capability_groups {
+    path_expression: "vp9/.*"
+    path_expression: "vpx/.*"
+    path_expression: "vpx_scale/.*"
+    rules: "agents/knowledge_base/rules/vp9/account-for-high-bit-depth-in-buffer-allocation.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/vp9/assert-implicit-bitstream-format-invariants.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    rules: "agents/knowledge_base/rules/vp9/cache-encoder-state-before-destruction.md"
+  }
+  capability_groups {
+    path_expression: "vp9/decoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/mark-sync-progress-on-early-abort.md"
+    rules: "agents/knowledge_base/rules/vp9/queue-dependent-jobs-before-signaling-completion-map.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/reuse-svc-per-layer-dimension-arrays.md"
+    rules: "agents/knowledge_base/rules/vp9/skip-prediction-buffer-setup-on-final-iteration.md"
+  }
+}

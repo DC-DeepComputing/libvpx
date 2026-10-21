@@ -1,0 +1,152 @@
+# Copyright (c) 2026 The WebM project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+agentic_review {
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    rules: "agents/knowledge_base/rules/general/add-rounding-factor-before-division-for-ceiling-arithmetic.md"
+    rules: "agents/knowledge_base/rules/general/avoid-large-stack-allocations.md"
+    rules: "agents/knowledge_base/rules/general/check-allocation-return-for-null.md"
+    rules: "agents/knowledge_base/rules/general/do-not-access-struct-fields-after-free.md"
+    rules: "agents/knowledge_base/rules/general/guard-msan-buffer-zero-initialization.md"
+    rules: "agents/knowledge_base/rules/general/hoist-invariant-allocations-outside-loops.md"
+    rules: "agents/knowledge_base/rules/general/named-constants-for-block-dimensions.md"
+    rules: "agents/knowledge_base/rules/general/reset-pointers-to-null-after-free.md"
+    rules: "agents/knowledge_base/rules/general/return-invalid-param-for-null-caller-pointers.md"
+    rules: "agents/knowledge_base/rules/general/validate-array-bounds-before-writing-and-incrementing.md"
+    rules: "agents/knowledge_base/rules/general/validate-enum-range-before-casting.md"
+    rules: "agents/knowledge_base/rules/general/verify-identifiers-in-conditionally-compiled-blocks.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_scale/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/advance-row-pointer-by-stride-in-2d-traversal.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/general/annotate-intentional-unsigned-overflow-wraparound.md"
+    rules: "agents/knowledge_base/rules/general/cache-struct-member-pointers-outside-loops.md"
+    rules: "agents/knowledge_base/rules/general/prefer-compiler-atomic-builtins.md"
+    rules: "agents/knowledge_base/rules/general/prefer-flat-zero-initializer-for-aggregates.md"
+    rules: "agents/knowledge_base/rules/general/update-resource-counts-before-fallible-allocations.md"
+    rules: "agents/knowledge_base/rules/general/use-static-const-for-local-constant-arrays.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/assert-buffer-alignment-and-preconditions.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/general/assert-documented-invariants-and-preconditions.md"
+    rules: "agents/knowledge_base/rules/general/avoid-assigning-comparison-when-factoring-ternary.md"
+    rules: "agents/knowledge_base/rules/general/bound-array-and-stack-operations-with-explicit-size.md"
+    rules: "agents/knowledge_base/rules/general/break-early-from-short-circuitable-loops.md"
+    rules: "agents/knowledge_base/rules/general/break-early-when-fixed-buffer-full.md"
+    rules: "agents/knowledge_base/rules/general/clamp-sample-values-to-bit-depth.md"
+    rules: "agents/knowledge_base/rules/general/close-opened-file-streams-with-fclose.md"
+    rules: "agents/knowledge_base/rules/general/free-allocated-struct-members-in-teardown.md"
+    rules: "agents/knowledge_base/rules/general/guard-optional-features-with-config-macros.md"
+    rules: "agents/knowledge_base/rules/general/prefer-struct-over-positional-array.md"
+    rules: "agents/knowledge_base/rules/general/store-computed-index-and-assert-bounds.md"
+    rules: "agents/knowledge_base/rules/general/use-off-t-for-posix-file-offsets.md"
+    rules: "agents/knowledge_base/rules/general/use-standard-compiler-and-platform-macros.md"
+  }
+  capability_groups {
+    path_expression: "vp8/common/arm/.*"
+    path_expression: "vp8/common/x86/.*"
+    path_expression: "vp9/common/arm/.*"
+    path_expression: "vp9/common/x86/.*"
+    path_expression: "vpx_dsp/.*"
+    rules: "agents/knowledge_base/rules/general/assert-fixed-step-simd-preconditions.md"
+    rules: "agents/knowledge_base/rules/general/declare-aligned-for-simd-stack-buffers.md"
+    rules: "agents/knowledge_base/rules/general/match-simd-assembly-to-c-reference-semantics.md"
+    rules: "agents/knowledge_base/rules/general/size-buffers-for-simd-overreads-not-sanitizers.md"
+    rules: "agents/knowledge_base/rules/general/store-unaligned-32bit-simd-via-memcpy.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression_exclusion: "third_party/.*"
+    rules: "agents/knowledge_base/rules/general/avoid-assertions-on-unverified-range-assumptions.md"
+    rules: "agents/knowledge_base/rules/general/scope-sanitizer-suppressions-to-minimal-helpers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    rules: "agents/knowledge_base/rules/general/bind-range-for-elements-by-const-ref.md"
+    rules: "agents/knowledge_base/rules/general/do-not-release-unique-ptr-on-error.md"
+    rules: "agents/knowledge_base/rules/general/use-nothrow-new-for-heap-allocation.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h)"
+    rules: "agents/knowledge_base/rules/general/bounds-check-layer-indices-before-array-access.md"
+    rules: "agents/knowledge_base/rules/general/encapsulate-optional-feature-state-to-prevent-struct-bloat.md"
+    rules: "agents/knowledge_base/rules/general/parenthesize-offset-pointer-cast.md"
+    rules: "agents/knowledge_base/rules/general/provide-windows-wrappers-for-pthread-apis.md"
+    rules: "agents/knowledge_base/rules/general/scope-internal-macros-to-source-files.md"
+    rules: "agents/knowledge_base/rules/general/use-uint8-for-struct-flags-and-small-fields.md"
+  }
+  capability_groups {
+    path_expression: "test/.*"
+    rules: "agents/knowledge_base/rules/general/define-fallback-for-compiler-feature-test-macros.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*arm[^/]*/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.cc"
+    path_expression: "(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/neon-vabd-for-squared-differences.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*arm[^/]*/.*"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.cc"
+    rules: "agents/knowledge_base/rules/general/no-aggregate-initializer-for-arm-neon-vector-types.md"
+    rules: "agents/knowledge_base/rules/general/valid-arm-neon-vector-type-suffix.md"
+  }
+  capability_groups {
+    path_expression: "vpx/.*"
+    rules: "agents/knowledge_base/rules/general/no-cleanup-after-vpx-internal-error.md"
+    rules: "agents/knowledge_base/rules/general/no-vpx-internal-error-in-cleanup.md"
+    rules: "agents/knowledge_base/rules/general/validate-pointer-parameters-against-null-at-api-entry-points.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/no-empty-fallback-memory-barriers.md"
+    rules: "agents/knowledge_base/rules/general/use-void-pointer-for-multi-type-buffers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "(?:.*/)?[^/]*x86[^/]*/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp8/(?:.*/)?x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/pass-simd-vectors-by-pointer-for-abi-alignment.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.h"
+    rules: "agents/knowledge_base/rules/general/preserve-transitive-platform-headers.md"
+  }
+  capability_groups {
+    path_expression: "vpx/.*"
+    path_expression_exclusion: "third_party/.*"
+    path_expression_exclusion: "vpx_ports/static_assert\\.h"
+    rules: "agents/knowledge_base/rules/general/use-vpx-static-assert-in-c-code.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/general/when-declaring-c-function-parameters-for-fixed-size-arrays-u.md"
+  }
+}
