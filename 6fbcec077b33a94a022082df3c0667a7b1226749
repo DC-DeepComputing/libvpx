@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c1dc6db1_3cfe71b5",
+        "filename": "vp8/encoder/onyx_if.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2632,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-10-21T15:39:10Z",
+      "side": 1,
+      "message": "Is this meant to act as something tracking budget, so negative is all right to some level?",
+      "revId": "6fbcec077b33a94a022082df3c0667a7b1226749",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
