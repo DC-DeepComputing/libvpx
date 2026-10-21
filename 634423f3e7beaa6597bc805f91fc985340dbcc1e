@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0f6c88eb_6f3d029d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5260069
+      },
+      "writtenOn": "2026-10-21T17:48:05Z",
+      "side": 1,
+      "message": "Thanks @jianj@google.com and @marpan@google.com for the approvals, as an external contributor, I don\u0027t have submit button available, could one of you please submit?",
+      "revId": "634423f3e7beaa6597bc805f91fc985340dbcc1e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
