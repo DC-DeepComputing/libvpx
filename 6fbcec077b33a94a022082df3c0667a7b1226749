@@ -16,6 +16,24 @@
       "message": "Is this meant to act as something tracking budget, so negative is all right to some level?",
       "revId": "6fbcec077b33a94a022082df3c0667a7b1226749",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "821825ea_b1fc5034",
+        "filename": "vp8/encoder/onyx_if.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2632,
+      "author": {
+        "id": 1126910
+      },
+      "writtenOn": "2026-10-21T16:52:28Z",
+      "side": 1,
+      "message": "Makes sense to avoid negative, overspent should be positive.",
+      "parentUuid": "c1dc6db1_3cfe71b5",
+      "revId": "6fbcec077b33a94a022082df3c0667a7b1226749",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
