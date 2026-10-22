@@ -36,6 +36,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "38f4b2b6_eea8b5ca",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 5260069
+      },
+      "writtenOn": "2026-10-22T21:05:20Z",
+      "side": 1,
+      "message": "@wtc@google.com I singed cla a few days ago, so we should be good. Do let me know if I need to make any changes to AUTHORS file",
+      "parentUuid": "22eb47ac_7d91652a",
+      "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "99f4c701_7969d558",
