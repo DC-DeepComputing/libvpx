@@ -54,6 +54,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1dbf6170_0c2b926f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-22T22:02:03Z",
+      "side": 1,
+      "message": "Anish: Thank you for the confirmation. You don\u0027t need to add yourself to the AUTHORS file. We will take care of that when we create the next libvpx release.",
+      "parentUuid": "38f4b2b6_eea8b5ca",
+      "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "99f4c701_7969d558",
@@ -67,6 +85,24 @@
       "writtenOn": "2026-10-22T20:42:26Z",
       "side": 1,
       "message": "Marco, Jerome: Should we validate the other fields in `data`?\n\nIf so, let\u0027s address this in a follow-up CL.",
+      "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "33cfa740_69aa9cd4",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2016,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-22T22:02:03Z",
+      "side": 1,
+      "message": "I will ask Marco in person.",
+      "parentUuid": "99f4c701_7969d558",
       "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
