@@ -16,6 +16,24 @@
       "message": "Thanks @marpan@google.com for the approvals, as an external contributor, I don\u0027t have submit button available, could you please submit?",
       "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "22eb47ac_7d91652a",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-22T20:36:59Z",
+      "side": 1,
+      "message": "Hi Anish,\n\nYou are not listed in the AUTHORS file. Could you please confirm that you have signed a contributor license agreement (CLA)?\n\nhttps://cla.developers.google.com/clas",
+      "parentUuid": "30b12ed2_ce026828",
+      "revId": "fb1279dcc6db0cbfb0b6015d0ba7587759c5625a",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
