@@ -34,6 +34,24 @@
       "parentUuid": "95ea9a9c_894414e8",
       "revId": "c1134e9f9e6a1e094307e0f4d09e11e16cc6dff8",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e6798423_30acd6f2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-22T21:36:00Z",
+      "side": 1,
+      "message": "Nathan: Thank you very much for the patch. After taking a look at the patch, I decided to decline it.\n\nIn general the [kinds of patches covered by the Patch Rewards Program](https://bughunters.google.com/about/rules/open-source/patch-rewards-program-rules#qualifying-submissions) are good coding practices. For example, this patch falls under the category \"Refactorings that make it easier to reason about the security properties of the code\". However, for a mature and stable code base such as the VP8 and VP9 **decoders** in libvpx, it may make sense to follow the principle of \"if it ain\u0027t broke, don\u0027t fix it\" for two reasons:\n- It takes time for us to review this patch.\n- This patch changes the pattern of calling `decrypt_cb`. For example, in the `vp9_parse_superframe_index()` function, a single `decrypt_cb` call of `frames * mag` bytes is replaced by `frames` `decrypt_cb` calls of `mag` bytes each. This is a potential source of bug if a particular `decrypt_cb` implementation depends on the current calling pattern.",
+      "parentUuid": "cdab18eb_5994ce70",
+      "revId": "c1134e9f9e6a1e094307e0f4d09e11e16cc6dff8",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
