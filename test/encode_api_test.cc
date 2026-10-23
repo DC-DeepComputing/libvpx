@@ -4189,6 +4189,89 @@ TEST(EncodeAPI, VP9DenoiserResolutionChange) {
   ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
 #endif  // CONFIG_VP9_TEMPORAL_DENOISING
+
+// Bug: 575939911.
+TEST(EncodeAPI, SvcResizeUnscaledReferenceMotionSearch) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+
+  cfg.g_w = 1280;
+  cfg.g_h = 720;
+  cfg.g_lag_in_frames = 0;
+  cfg.g_pass = VPX_RC_ONE_PASS;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.rc_target_bitrate = 1000;
+  cfg.ss_number_layers = 1;
+  cfg.ts_number_layers = 3;
+  cfg.temporal_layering_mode = VP9E_TEMPORAL_LAYERING_MODE_0212;
+  cfg.ts_target_bitrate[0] = 400;
+  cfg.ts_target_bitrate[1] = 600;
+  cfg.ts_target_bitrate[2] = 1000;
+  cfg.layer_target_bitrate[0] = 400;
+  cfg.layer_target_bitrate[1] = 600;
+  cfg.layer_target_bitrate[2] = 1000;
+  cfg.ts_rate_decimator[0] = 4;
+  cfg.ts_rate_decimator[1] = 2;
+  cfg.ts_rate_decimator[2] = 1;
+
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 7), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_TUNE_CONTENT, VP9E_CONTENT_SCREEN),
+            VPX_CODEC_OK);
+
+  vpx_svc_extra_cfg_t svc_cfg = {};
+  for (int i = 0; i < VPX_MAX_LAYERS; ++i) {
+    svc_cfg.max_quantizers[i] = 56;
+    svc_cfg.min_quantizers[i] = 2;
+    svc_cfg.scaling_factor_num[i] = 1;
+    svc_cfg.scaling_factor_den[i] = 1;
+  }
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC_PARAMETERS, &svc_cfg),
+            VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&enc, VP9E_SET_SVC, 1), VPX_CODEC_OK);
+
+  struct Batch {
+    unsigned int w;
+    unsigned int h;
+    int count;
+  };
+  const Batch kBatches[] = { { 1280, 720, 1 },
+                             { 80, 46, 5 },
+                             { 1280, 720, 4 } };
+
+  uint32_t s = 1;
+  vpx_codec_pts_t pts = 0;
+  for (const auto &batch : kBatches) {
+    cfg.g_w = batch.w;
+    cfg.g_h = batch.h;
+    ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+
+    vpx_image_t *const img =
+        vpx_img_alloc(nullptr, VPX_IMG_FMT_I420, batch.w, batch.h, 1);
+    ASSERT_NE(img, nullptr);
+
+    for (int i = 0; i < batch.count; ++i) {
+      for (int plane = 0; plane < 3; ++plane) {
+        const unsigned int plane_w = plane ? (batch.w + 1) >> 1 : batch.w;
+        const unsigned int plane_h = plane ? (batch.h + 1) >> 1 : batch.h;
+        for (unsigned int y = 0; y < plane_h; ++y) {
+          uint8_t *const row = img->planes[plane] + y * img->stride[plane];
+          for (unsigned int x = 0; x < plane_w; ++x) {
+            s = s * 1103515245u + 12345u;
+            row[x] = static_cast<uint8_t>(s >> 16);
+          }
+        }
+      }
+      ASSERT_EQ(vpx_codec_encode(&enc, img, pts++, 1, 0, VPX_DL_REALTIME),
+                VPX_CODEC_OK);
+    }
+    vpx_img_free(img);
+  }
+
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
 #endif  // CONFIG_VP9_ENCODER
 
 }  // namespace

@@ -1824,9 +1824,10 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
         &cm->frame_refs[GOLDEN_FRAME - 1].sf;
     gf_temporal_ref = 1;
     // For temporal long term prediction, check that the golden reference
-    // is same scale as last reference, otherwise disable.
+    // is same scale as last reference and not scaled, otherwise disable.
     if ((sf_last->x_scale_fp != sf_golden->x_scale_fp) ||
-        (sf_last->y_scale_fp != sf_golden->y_scale_fp)) {
+        (sf_last->y_scale_fp != sf_golden->y_scale_fp) ||
+        vp9_is_scaled(sf_golden)) {
       gf_temporal_ref = 0;
     } else {
       if (cpi->rc.avg_frame_low_motion > 70)
@@ -1941,10 +1942,11 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
     }
   }
 
-  // For svc mode, on spatial_layer_id > 0: if the reference has different scale
-  // constrain the inter mode to only test zero motion.
+  // For svc mode: if the reference has different scale constrain the inter mode
+  // to only test zero motion, except for single_layer_svc with dynamic resize
+  // where reference scaling is performed.
   if (cpi->use_svc && svc->force_zero_mode_spatial_ref &&
-      svc->spatial_layer_id > 0 && !gf_temporal_ref) {
+      !(svc->single_layer_svc && cpi->oxcf.resize_mode == RESIZE_DYNAMIC)) {
     if (cpi->ref_frame_flags & VP9_LAST_FLAG) {
       struct scale_factors *const ref_sf = &cm->frame_refs[LAST_FRAME - 1].sf;
       if (vp9_is_scaled(ref_sf)) {
