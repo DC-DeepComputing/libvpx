@@ -5112,8 +5112,21 @@ static void nonrd_use_partition(VP9_COMP *cpi, ThreadData *td,
 static void get_estimated_pred(VP9_COMP *cpi, const TileInfo *const tile,
                                MACROBLOCK *x, int mi_row, int mi_col) {
   VP9_COMMON *const cm = &cpi->common;
-  const int is_key_frame = frame_is_intra_only(cm);
+  int is_key_frame =
+      (frame_is_intra_only(cm) ||
+       (is_one_pass_svc(cpi) &&
+        cpi->svc.layer_context[cpi->svc.temporal_layer_id].is_key_frame));
   MACROBLOCKD *xd = &x->e_mbd;
+
+  if (!is_key_frame) {
+    const YV12_BUFFER_CONFIG *const ref = get_ref_frame_buffer(cpi, LAST_FRAME);
+    if (cm->frame_refs[LAST_FRAME - 1].sf.x_scale_fp == REF_INVALID_SCALE ||
+        cm->frame_refs[LAST_FRAME - 1].sf.y_scale_fp == REF_INVALID_SCALE ||
+        ref == NULL || ref->y_crop_height != cm->height ||
+        ref->y_crop_width != cm->width ||
+        !(cpi->ref_frame_flags & VP9_LAST_FLAG))
+      is_key_frame = 1;
+  }
 
   set_offsets(cpi, tile, x, mi_row, mi_col, BLOCK_64X64);
 
