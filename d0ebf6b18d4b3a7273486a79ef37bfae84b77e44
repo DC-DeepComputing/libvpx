@@ -16,6 +16,24 @@
       "message": "is it possible to factor out this condition as an inline function and be shared between this and `choose_partitioning`?",
       "revId": "d0ebf6b18d4b3a7273486a79ef37bfae84b77e44",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b5af6101_d5d2d2fe",
+        "filename": "vp9/encoder/vp9_encodeframe.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 5128,
+      "author": {
+        "id": 1126910
+      },
+      "writtenOn": "2026-10-26T19:05:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4324007f_68e4dea2",
+      "revId": "d0ebf6b18d4b3a7273486a79ef37bfae84b77e44",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
