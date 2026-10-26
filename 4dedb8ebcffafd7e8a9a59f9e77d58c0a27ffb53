@@ -38,6 +38,23 @@
     {
       "unresolved": false,
       "key": {
+        "uuid": "8b814361_7977d470",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1247893
+      },
+      "writtenOn": "2026-10-26T13:59:45Z",
+      "side": 1,
+      "message": "(Confirming that I reviewed and approved this internally also.)",
+      "revId": "4dedb8ebcffafd7e8a9a59f9e77d58c0a27ffb53",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
         "uuid": "43e74ab9_94996907",
         "filename": "vpx_dsp/arm/sad4d_neon_dotprod.c",
         "patchSetId": 1
