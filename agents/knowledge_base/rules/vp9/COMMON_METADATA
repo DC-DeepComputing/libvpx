@@ -1,0 +1,40 @@
+# Copyright (c) 2026 The WebM project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+agentic_review {
+  capability_groups {
+    path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/configure-speed-heuristics-in-speed-features.md"
+    rules: "agents/knowledge_base/rules/vp9/differentiate-layer-depth-for-gf-vs-overlay-update.md"
+    rules: "agents/knowledge_base/rules/vp9/support-updating-arbitrary-svc-reference-buffer-slots.md"
+    rules: "agents/knowledge_base/rules/vp9/validate-simulcast-layer-limits.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/guard-external-buffer-release-callbacks.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/vp9_cx_iface\\.c"
+    rules: "agents/knowledge_base/rules/vp9/guard-svc-state-with-use-svc.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/place-rate-control-logic-in-ratectrl-module.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/sync-mirrored-rate-control-heuristics.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/sync-svc-reference-flags-and-buffer-indices.md"
+  }
+}
