@@ -1408,6 +1408,26 @@ get_first_pass_stats_pkt(FIRSTPASS_STATS *stats) {
 }
 #endif
 
+// Replaces ctx->cx_data with a buffer of data_sz bytes. Pending invisible
+// frame data is copied to the new buffer. Frame packets left in the packet
+// list from the previous call point into the old buffer, so the list is
+// reset.
+static vpx_codec_err_t realloc_cx_data(vpx_codec_alg_priv_t *ctx,
+                                       size_t data_sz) {
+  unsigned char *const cx_data = (unsigned char *)malloc(data_sz);
+  if (cx_data == NULL) return VPX_CODEC_MEM_ERROR;
+  if (ctx->pending_cx_data != NULL) {
+    assert(ctx->pending_cx_data_sz <= data_sz);
+    memcpy(cx_data, ctx->pending_cx_data, ctx->pending_cx_data_sz);
+    ctx->pending_cx_data = cx_data;
+  }
+  vpx_codec_pkt_list_init(&ctx->pkt_list);
+  free(ctx->cx_data);
+  ctx->cx_data = cx_data;
+  ctx->cx_data_sz = data_sz;
+  return VPX_CODEC_OK;
+}
+
 const size_t kMinCompressedSize = 8192;
 static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
                                       const vpx_image_t *img,
@@ -1440,12 +1460,8 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
               (cpi->multi_layer_arf ? 8 : 2);
     if (data_sz < kMinCompressedSize) data_sz = kMinCompressedSize;
     if (ctx->cx_data == NULL || ctx->cx_data_sz < data_sz) {
-      ctx->cx_data_sz = data_sz;
-      free(ctx->cx_data);
-      ctx->cx_data = (unsigned char *)malloc(ctx->cx_data_sz);
-      if (ctx->cx_data == NULL) {
-        return VPX_CODEC_MEM_ERROR;
-      }
+      res = realloc_cx_data(ctx, data_sz);
+      if (res != VPX_CODEC_OK) return res;
     }
 
     int chroma_subsampling = -1;
