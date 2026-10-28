@@ -634,6 +634,7 @@ int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
   denoiser->num_ref_frames = use_svc ? SVC_REF_FRAMES : NONSVC_REF_FRAMES;
   init_num_ref_frames = use_svc ? MAX_REF_FRAMES : NONSVC_REF_FRAMES;
   denoiser->num_layers = num_layers;
+  denoiser->use_svc = use_svc;
   CHECK_MEM_ERROR(&cm->error, denoiser->running_avg_y,
                   vpx_calloc(denoiser->num_ref_frames * num_layers,
                              sizeof(denoiser->running_avg_y[0])));
