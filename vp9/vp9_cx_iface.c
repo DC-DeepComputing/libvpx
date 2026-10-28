@@ -839,7 +839,8 @@ static vpx_codec_err_t encoder_set_config(vpx_codec_alg_priv_t *ctx,
   vpx_codec_err_t res;
   volatile int force_key = 0;
 
-  if (cfg->g_w != ctx->cfg.g_w || cfg->g_h != ctx->cfg.g_h) {
+  if (cfg->g_w != ctx->cfg.g_w || cfg->g_h != ctx->cfg.g_h ||
+      ctx->cpi->realloc_pending) {
     if (cfg->g_lag_in_frames > 1 || cfg->g_pass != VPX_RC_ONE_PASS)
       ERROR("Cannot change width or height after initialization");
     // Note: function encoder_set_config() is allowed to be called multiple
@@ -888,9 +889,10 @@ static vpx_codec_err_t encoder_set_config(vpx_codec_alg_priv_t *ctx,
   set_twopass_params_from_config(&ctx->cfg, ctx->cpi);
   // On profile change, request a key frame
   force_key |= ctx->cpi->common.profile != ctx->oxcf.profile;
-  vp9_change_config(ctx->cpi, &ctx->oxcf);
-
+  // Request the key frame first: if vp9_change_config() fails, ctx->cfg and
+  // part of the encoder state already have the new values.
   if (force_key) ctx->next_frame_flags |= VPX_EFLAG_FORCE_KF;
+  vp9_change_config(ctx->cpi, &ctx->oxcf);
 
   ctx->cpi->common.error.setjmp = 0;
   return VPX_CODEC_OK;
@@ -934,13 +936,23 @@ static vpx_codec_err_t ctrl_get_loopfilter_level(vpx_codec_alg_priv_t *ctx,
 static vpx_codec_err_t update_extra_cfg(vpx_codec_alg_priv_t *ctx,
                                         const struct vp9_extracfg *extra_cfg) {
   const vpx_codec_err_t res = validate_config(ctx, &ctx->cfg, extra_cfg);
-  if (res == VPX_CODEC_OK) {
-    ctx->extra_cfg = *extra_cfg;
-    set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
-    set_twopass_params_from_config(&ctx->cfg, ctx->cpi);
-    vp9_change_config(ctx->cpi, &ctx->oxcf);
+  if (res != VPX_CODEC_OK) return res;
+
+  if (setjmp(ctx->cpi->common.error.jmp)) {
+    const vpx_codec_err_t codec_err =
+        update_error_state(ctx, &ctx->cpi->common.error);
+    ctx->cpi->common.error.setjmp = 0;
+    vpx_clear_system_state();
+    assert(codec_err != VPX_CODEC_OK);
+    return codec_err;
   }
-  return res;
+  ctx->cpi->common.error.setjmp = 1;
+  ctx->extra_cfg = *extra_cfg;
+  set_encoder_config(&ctx->oxcf, &ctx->cfg, &ctx->extra_cfg);
+  set_twopass_params_from_config(&ctx->cfg, ctx->cpi);
+  vp9_change_config(ctx->cpi, &ctx->oxcf);
+  ctx->cpi->common.error.setjmp = 0;
+  return VPX_CODEC_OK;
 }
 
 static vpx_codec_err_t ctrl_set_cpuused(vpx_codec_alg_priv_t *ctx,
@@ -1146,6 +1158,7 @@ static vpx_codec_err_t ctrl_set_rtc_external_ratectrl(vpx_codec_alg_priv_t *ctx,
                                                       va_list args) {
   VP9_COMP *const cpi = ctx->cpi;
   const unsigned int data = va_arg(args, unsigned int);
+  if (cpi->realloc_pending) return VPX_CODEC_ERROR;
   if (data) {
     cpi->compute_frame_low_motion_onepass = 0;
     cpi->rc.constrain_gf_key_freq_onepass_vbr = 0;
@@ -1394,6 +1407,11 @@ static vpx_codec_err_t encoder_encode(vpx_codec_alg_priv_t *ctx,
   memset(&pkt, 0, sizeof(pkt));
 
   if (cpi == NULL) return VPX_CODEC_INVALID_PARAM;
+  if (cpi->realloc_pending) {
+    ctx->base.err_detail =
+        "Encoder buffers are incomplete after a failed configuration change";
+    return VPX_CODEC_ERROR;
+  }
 
   cpi->last_coded_width = ctx->oxcf.width;
   cpi->last_coded_height = ctx->oxcf.height;
@@ -1825,6 +1843,7 @@ static vpx_codec_err_t ctrl_set_roi_map(vpx_codec_alg_priv_t *ctx,
                                         va_list args) {
   vpx_roi_map_t *data = va_arg(args, vpx_roi_map_t *);
 
+  if (ctx->cpi->realloc_pending) return VPX_CODEC_ERROR;
   if (data) {
     vpx_roi_map_t *roi = (vpx_roi_map_t *)data;
     return vp9_set_roi_map(ctx->cpi, roi->roi_map, roi->rows, roi->cols,
@@ -1838,6 +1857,7 @@ static vpx_codec_err_t ctrl_set_active_map(vpx_codec_alg_priv_t *ctx,
                                            va_list args) {
   vpx_active_map_t *const map = va_arg(args, vpx_active_map_t *);
 
+  if (ctx->cpi->realloc_pending) return VPX_CODEC_ERROR;
   if (map) {
     if (!vp9_set_active_map(ctx->cpi, map->active_map, (int)map->rows,
                             (int)map->cols))
@@ -1852,6 +1872,7 @@ static vpx_codec_err_t ctrl_get_active_map(vpx_codec_alg_priv_t *ctx,
                                            va_list args) {
   vpx_active_map_t *const map = va_arg(args, vpx_active_map_t *);
 
+  if (ctx->cpi->realloc_pending) return VPX_CODEC_ERROR;
   if (map) {
     if (!vp9_get_active_map(ctx->cpi, map->active_map, (int)map->rows,
                             (int)map->cols))
@@ -1866,6 +1887,7 @@ static vpx_codec_err_t ctrl_set_scale_mode(vpx_codec_alg_priv_t *ctx,
                                            va_list args) {
   vpx_scaling_mode_t *const mode = va_arg(args, vpx_scaling_mode_t *);
 
+  if (ctx->cpi->realloc_pending) return VPX_CODEC_ERROR;
   if (mode) {
     const int res = vp9_set_internal_size(ctx->cpi, mode->h_scaling_mode,
                                           mode->v_scaling_mode);
