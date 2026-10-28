@@ -678,9 +678,13 @@ YV12_BUFFER_CONFIG *vp9_get_scaled_ref_frame(const VP9_COMP *cpi,
   const int scaled_idx = cpi->scaled_ref_idx[ref_frame - 1];
   const int ref_idx = get_ref_frame_buf_idx(cpi, ref_frame);
   assert(ref_frame >= LAST_FRAME && ref_frame <= ALTREF_FRAME);
-  return (scaled_idx != ref_idx && scaled_idx != INVALID_IDX)
-             ? &cm->buffer_pool->frame_bufs[scaled_idx].buf
-             : NULL;
+  YV12_BUFFER_CONFIG *scaled_buf;
+  if (scaled_idx == ref_idx || scaled_idx == INVALID_IDX) return NULL;
+  scaled_buf = &cm->buffer_pool->frame_bufs[scaled_idx].buf;
+  // A scaled reference must always have the current frame size.
+  assert(scaled_buf->y_crop_width == cm->width &&
+         scaled_buf->y_crop_height == cm->height);
+  return scaled_buf;
 }
 
 int vp9_get_switchable_rate(const VP9_COMP *cpi, const MACROBLOCKD *const xd) {
