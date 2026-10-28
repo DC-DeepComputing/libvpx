@@ -1700,7 +1700,9 @@ void vp9_estimate_tpl_qp_gop(VP9_COMP *cpi) {
       (sb_params *)vpx_malloc(frame_height_sb * frame_width_sb *
                               sizeof(*encode_frame_decision.sb_params_list)));
 
-  for (idx = gf_index; idx <= gop_length; ++idx) {
+  // TPL frame indices must be below MAX_ARF_GOP_SIZE, as in
+  // vp9_get_tpl_frame(). The GF group itself may be longer.
+  for (idx = gf_index; idx <= gop_length && idx < MAX_ARF_GOP_SIZE; ++idx) {
     TplDepFrame *tpl_frame = &cpi->tpl_stats[idx];
     int target_rate = cpi->twopass.gf_group.bit_allocation[idx];
     cpi->twopass.gf_group.index = idx;
