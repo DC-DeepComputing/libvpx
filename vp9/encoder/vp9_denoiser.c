@@ -465,9 +465,19 @@ void vp9_denoiser_update_frame_info(
     VP9_DENOISER *denoiser, YV12_BUFFER_CONFIG src, struct SVC *svc,
     FRAME_TYPE frame_type, int refresh_alt_ref_frame, int refresh_golden_frame,
     int refresh_last_frame, int alt_fb_idx, int gld_fb_idx, int lst_fb_idx,
-    int resized, int svc_refresh_denoiser_buffers, int second_spatial_layer) {
+    int resized, int use_svc, int svc_refresh_denoiser_buffers,
+    int second_spatial_layer) {
   const int shift = second_spatial_layer ? denoiser->num_ref_frames : 0;
   const int layer = second_spatial_layer ? 1 : 0;
+  if (!use_svc) {
+    // Without SVC the denoiser keeps one buffer per reference frame type
+    // (LAST_FRAME and GOLDEN_FRAME), which is how vp9_denoiser_denoise() looks
+    // them up, rather than one per frame buffer. ALTREF_FRAME is never used as
+    // a denoising reference and has no buffer.
+    refresh_alt_ref_frame = 0;
+    gld_fb_idx = GOLDEN_FRAME - 1;
+    lst_fb_idx = LAST_FRAME - 1;
+  }
   // Copy source into denoised reference buffers on KEY_FRAME or
   // if the just encoded frame was resized. For SVC, copy source if the base
   // spatial layer was key frame.
@@ -484,7 +494,8 @@ void vp9_denoiser_update_frame_info(
     return;
   }
 
-  if (svc->temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_BYPASS &&
+  if (use_svc &&
+      svc->temporal_layering_mode == VP9E_TEMPORAL_LAYERING_MODE_BYPASS &&
       svc->use_set_ref_frame_config) {
     int i;
     for (i = 0; i < REF_FRAMES; i++) {
@@ -874,8 +885,8 @@ void vp9_denoiser_update_ref_frame(VP9_COMP *const cpi) {
         &cpi->denoiser, *cpi->Source, svc, frame_type,
         cpi->refresh_alt_ref_frame, cpi->refresh_golden_frame,
         cpi->refresh_last_frame, cpi->alt_fb_idx, cpi->gld_fb_idx,
-        cpi->lst_fb_idx, cpi->resize_pending, svc_refresh_denoiser_buffers,
-        denoise_svc_second_layer);
+        cpi->lst_fb_idx, cpi->resize_pending, cpi->use_svc,
+        svc_refresh_denoiser_buffers, denoise_svc_second_layer);
   }
 }
 
