@@ -8,18 +8,66 @@
 
 agentic_review {
   capability_groups {
+    path_expression: "vpx/(?:.*/)?[^/]*\\.h"
+    rules: "knowledge_base/rules/vpx/add-public-api-symbols-to-exports-files.md"
+    rules: "knowledge_base/rules/vpx/bump-abi-version-on-public-header-changes.md"
+    rules: "knowledge_base/rules/vpx/document-public-api-and-callbacks-with-doxygen.md"
+    rules: "knowledge_base/rules/vpx/include-extracted-headers-in-original-public-headers.md"
+    rules: "knowledge_base/rules/vpx/keep-codec-specific-definitions-in-codec-headers.md"
+    rules: "knowledge_base/rules/vpx/name-api-functions-concisely-without-allocation-details.md"
+    rules: "knowledge_base/rules/vpx/no-dedicated-allocators-for-codec-controls.md"
+    rules: "knowledge_base/rules/vpx/provide-api-functions-to-compute-buffer-sizes.md"
+    rules: "knowledge_base/rules/vpx/spell-out-standard-terms-in-codec-control-names.md"
+    rules: "knowledge_base/rules/vpx/sync-codec-control-type-macros.md"
+  }
+  capability_groups {
     path_expression: "vpx/.*"
     rules: "knowledge_base/rules/vpx/append-public-api-enum-entries-for-abi-compatibility.md"
     rules: "knowledge_base/rules/vpx/document-codec-control-values-and-defaults.md"
     rules: "knowledge_base/rules/vpx/expand-domain-abbreviations-in-public-api-documentation.md"
   }
   capability_groups {
-    path_expression: "vpx/(?:.*/)?[^/]*\\.h"
-    rules: "knowledge_base/rules/vpx/bump-abi-version-on-public-header-changes.md"
-    rules: "knowledge_base/rules/vpx/document-public-api-and-callbacks-with-doxygen.md"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx[^/]*/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression_exclusion: "examples/.*"
+    path_expression_exclusion: "test/.*"
+    path_expression_exclusion: "tools/.*"
+    rules: "knowledge_base/rules/vpx/avoid-printing-to-stderr-in-library-code.md"
+  }
+  capability_groups {
+    path_expression: "tools_common\\.[^/]*"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx/keep-tool-helpers-in-tools-common.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx/name-reference-frame-controls-by-type.md"
   }
   capability_groups {
     path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     rules: "knowledge_base/rules/vpx/require-caller-allocation-or-library-deallocator.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "knowledge_base/rules/vpx/unify-shared-codec-configuration-enums.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|cc|cpp)"
+    rules: "knowledge_base/rules/vpx/validate-codec-specific-flags-in-codec-interfaces.md"
+  }
+  capability_groups {
+    path_expression: "examples/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "test/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    rules: "knowledge_base/rules/vpx/vpx-distinguish-frame-buffer-slots-from-reference-roles.md"
   }
 }

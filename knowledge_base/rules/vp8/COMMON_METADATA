@@ -15,14 +15,139 @@ agentic_review {
     rules: "knowledge_base/rules/vp8/apply-rate-control-overflow-fixes-to-counterpart-routines.md"
   }
   capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "knowledge_base/rules/vp8/avoid-range-checks-for-downstream-clamped-config.md"
+    rules: "knowledge_base/rules/vp8/disable-cyclic-refresh-on-roi-map.md"
+    rules: "knowledge_base/rules/vp8/disable-segmentation-on-empty-roi-map.md"
+    rules: "knowledge_base/rules/vp8/match-mv-and-boundary-limit-scales.md"
+    rules: "knowledge_base/rules/vp8/name-decoder-context-parameters-pbi.md"
+    rules: "knowledge_base/rules/vp8/omit-redundant-buffer-alloc-field-zeroing.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vp8/check-vp8-sem-wait-return-and-errno.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    path_expression: "vpx_dsp/.*"
+    rules: "knowledge_base/rules/vp8/compute-eob-in-simd-registers.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp8/disable-unsupported-config-before-buffer-setup.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|h|hpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|h|hpp)"
+    rules: "knowledge_base/rules/vp8/distinct-resolution-thresholds-in-tiered-models.md"
+  }
+  capability_groups {
+    path_expression: "test/.*"
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    path_expression: "vpx/.*"
+    rules: "knowledge_base/rules/vp8/divide-bps-by-1000-not-8000-for-kbps.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vp8/guard-dynamic-flags-against-build-config-stats.md"
+    rules: "knowledge_base/rules/vp8/no-arbitrary-dimension-limits-for-allocation-overflow.md"
+    rules: "knowledge_base/rules/vp8/sync-shared-codec-controls-across-vp8-and-vp9.md"
+  }
+  capability_groups {
     path_expression: "vp8/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     path_expression: "vp9/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     rules: "knowledge_base/rules/vp8/keep-encoder-decoder-specific-types-out-of-common.md"
   }
   capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/never-drop-key-frames.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/omit-redundant-mode-checks-in-specialized-rtc-ratectrl.md"
+    rules: "knowledge_base/rules/vp8/update-compressor-state-directly-from-per-frame-flags.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/paired-codec-control-getter-setter-symmetry.md"
+    rules: "knowledge_base/rules/vp8/populate-vbr-params-in-constrained-quality-mode.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vp8/place-encoder-init-in-compressor-creation.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx_util/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vp8/place-shared-codec-utilities-in-vpx-util.md"
+  }
+  capability_groups {
+    path_expression: "vp8/decoder/.*"
+    path_expression: "vp9/decoder/.*"
+    rules: "knowledge_base/rules/vp8/propagate-decoder-corruption-errors.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "knowledge_base/rules/vp8/propagate-encoder-defaults-to-segments-without-specific-over.md"
+    rules: "knowledge_base/rules/vp8/scale-temporal-thresholds-by-framerate.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    rules: "knowledge_base/rules/vp8/replicate-edge-pixels-for-buffer-borders.md"
+  }
+  capability_groups {
     path_expression: "vp8/.*"
     path_expression: "vp9/.*"
+    rules: "knowledge_base/rules/vp8/report-error-on-misconfigured-explicit-feature.md"
+    rules: "knowledge_base/rules/vp8/store-runtime-state-in-internal-structures-not-public-config.md"
     rules: "knowledge_base/rules/vp8/symmetric-cpu-used-range-check.md"
+    rules: "knowledge_base/rules/vp8/synchronize-worker-threads-before-buffer-consumers.md"
+    rules: "knowledge_base/rules/vp8/use-named-frame-constants-for-reference-frames.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:h|hpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:h|hpp)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:h|hpp)"
+    rules: "knowledge_base/rules/vp8/share-common-codec-config-base-structs.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    path_expression: "vpx_dsp/.*"
+    path_expression: "vpx_scale/.*"
+    rules: "knowledge_base/rules/vp8/update-frame-buffer-geometry-fields-together.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/use-64bit-for-cumulative-rate-counters.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|h)"
+    rules: "knowledge_base/rules/vp8/use-check-mem-error-for-allocations.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*_cx_iface\\.c"
+    path_expression: "vp8/vp8_cx_iface\\.c"
+    path_expression: "vp9/vp9_cx_iface\\.c"
+    rules: "knowledge_base/rules/vp8/use-local-flags-variable-in-encoder-encode.md"
   }
   capability_groups {
     path_expression: "examples/.*"

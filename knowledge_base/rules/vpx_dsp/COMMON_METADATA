@@ -8,22 +8,63 @@
 
 agentic_review {
   capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    path_expression: "vpx_dsp/.*"
+    rules: "knowledge_base/rules/vpx_dsp/aggregate-simd-threshold-checks-with-max.md"
+    rules: "knowledge_base/rules/vpx_dsp/align-multiline-commented-reference-code.md"
+    rules: "knowledge_base/rules/vpx_dsp/avoid-function-pointers-in-inner-loops.md"
+    rules: "knowledge_base/rules/vpx_dsp/avoid-gratuitous-loop-unrolling-in-simd-dsp.md"
+    rules: "knowledge_base/rules/vpx_dsp/avoid-trivial-macros-wrapping-simd-intrinsics.md"
+    rules: "knowledge_base/rules/vpx_dsp/decompose-nested-simd-intrinsics.md"
+    rules: "knowledge_base/rules/vpx_dsp/document-dsp-accumulator-dynamic-ranges.md"
+    rules: "knowledge_base/rules/vpx_dsp/eliminate-redundant-strided-loop-index-masking.md"
+    rules: "knowledge_base/rules/vpx_dsp/extract-complex-simd-sequences-into-inline-helpers.md"
+    rules: "knowledge_base/rules/vpx_dsp/hoist-block-width-checks-outside-row-loops.md"
+    rules: "knowledge_base/rules/vpx_dsp/hoist-simd-quantizer-parameter-widening-and-replicate-ac.md"
+    rules: "knowledge_base/rules/vpx_dsp/invoke-new-simd-subroutines-in-drivers.md"
+    rules: "knowledge_base/rules/vpx_dsp/omit-dead-simd-register-updates-on-final-loop-iteration.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefetch-relative-to-advancing-loop-pointers.md"
+    rules: "knowledge_base/rules/vpx_dsp/reuse-intermediate-stack-buffers.md"
+    rules: "knowledge_base/rules/vpx_dsp/simplify-power-of-two-block-remainder-checks.md"
+    rules: "knowledge_base/rules/vpx_dsp/specialize-simd-format-helpers-for-inlining.md"
+    rules: "knowledge_base/rules/vpx_dsp/split-simple-simd-routines-from-complex-kernels.md"
+    rules: "knowledge_base/rules/vpx_dsp/unroll-inner-row-loops-in-simd-dsp.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-aligned-simd-for-aligned-buffers.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-store-prefix-for-simd-destination-helpers.md"
+    rules: "knowledge_base/rules/vpx_dsp/vpx-dsp-consistent-indexing-in-negative-counter-simd-loops.md"
+  }
+  capability_groups {
     path_expression: "vpx_dsp/.*"
     rules: "knowledge_base/rules/vpx_dsp/assume-even-block-dimensions-in-dsp-kernels.md"
     rules: "knowledge_base/rules/vpx_dsp/descriptive-or-generic-simd-variable-names.md"
     rules: "knowledge_base/rules/vpx_dsp/factor-block-dimension-dsp-kernels.md"
+    rules: "knowledge_base/rules/vpx_dsp/name-and-document-transform-helpers-by-output-quadrant.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-do-while-for-nonzero-dsp-loops.md"
+    rules: "knowledge_base/rules/vpx_dsp/prune-sparse-idct-zero-columns.md"
     rules: "knowledge_base/rules/vpx_dsp/simd-signed-accumulation-overflow-limits.md"
   }
   capability_groups {
-    path_expression: "vp8/.*"
-    path_expression: "vp9/.*"
-    path_expression: "vpx_dsp/.*"
-    rules: "knowledge_base/rules/vpx_dsp/avoid-gratuitous-loop-unrolling-in-simd-dsp.md"
-    rules: "knowledge_base/rules/vpx_dsp/decompose-nested-simd-intrinsics.md"
-    rules: "knowledge_base/rules/vpx_dsp/document-dsp-accumulator-dynamic-ranges.md"
-    rules: "knowledge_base/rules/vpx_dsp/extract-complex-simd-sequences-into-inline-helpers.md"
-    rules: "knowledge_base/rules/vpx_dsp/unroll-inner-row-loops-in-simd-dsp.md"
-    rules: "knowledge_base/rules/vpx_dsp/use-aligned-simd-for-aligned-buffers.md"
+    path_expression: "vp8/(?:.*/)?x86/.*"
+    path_expression: "vp9/(?:.*/)?x86/.*"
+    path_expression: "vpx_dsp/x86/.*"
+    rules: "knowledge_base/rules/vpx_dsp/avoid-64-bit-simd-loads-on-4-byte-rows.md"
+    rules: "knowledge_base/rules/vpx_dsp/cast-extract-epi16-to-int16-for-signed-values.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-mm-set-epi32-for-strided-loads.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-unpacklo-epi64-over-loadh-pi.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-cvtsi32-for-low-lane-scalar-initialization.md"
+    rules: "knowledge_base/rules/vpx_dsp/vpx-dsp-prefer-storel-epi64-over-extract-epi32.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/avoid-trivial-simd-wrapper-functions.md"
+    rules: "knowledge_base/rules/vpx_dsp/concise-simd-load-store-helper-names.md"
+    rules: "knowledge_base/rules/vpx_dsp/consolidate-simd-helpers-into-shared-headers.md"
+    rules: "knowledge_base/rules/vpx_dsp/consume-simd-load-helper-types-directly.md"
+    rules: "knowledge_base/rules/vpx_dsp/distinguish-multiply-add-from-multiply-accumulate.md"
+    rules: "knowledge_base/rules/vpx_dsp/separate-dual-simd-helper-suffix-with-underscore.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
@@ -31,8 +72,27 @@ agentic_review {
     path_expression: "vp9/(?:.*/)?arm/.*"
     path_expression: "vpx_dsp/arm/.*"
     rules: "knowledge_base/rules/vpx_dsp/avoid-wider-pointer-casts-for-simd-loads.md"
+    rules: "knowledge_base/rules/vpx_dsp/break-neon-accumulator-dependency-chains.md"
     rules: "knowledge_base/rules/vpx_dsp/prefer-neon-memory-helpers-over-memcpy.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-vbsl-for-neon-vector-selection.md"
     rules: "knowledge_base/rules/vpx_dsp/prefer-vdup-over-vmov-in-neon.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-vst1-over-vst2-for-contiguous-stores.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-vqdmulhq-for-neon-fixed-point-multiplication.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    path_expression: "vpx_dsp/.*"
+    path_expression: "vpx_scale/.*"
+    rules: "knowledge_base/rules/vpx_dsp/call-explicit-c-helpers-in-reference-code.md"
+    rules: "knowledge_base/rules/vpx_dsp/no-simd-padding-in-c-reference-buffers.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/x86/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/cast-64-bit-types-for-32-bit-simd-setters.md"
+    rules: "knowledge_base/rules/vpx_dsp/keep-simd-lanes-consistent-across-build-configs.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
@@ -51,10 +111,20 @@ agentic_review {
     rules: "knowledge_base/rules/vpx_dsp/combine-neon-multiply-and-accumulate-or-subtract.md"
   }
   capability_groups {
-    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    rules: "knowledge_base/rules/vpx_dsp/consolidate-simd-helpers-into-shared-headers.md"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vpx_dsp/external-linkage-for-rtcd-dsp-functions.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/fallback-adapters-for-neon-multi-vector-intrinsics.md"
+    rules: "knowledge_base/rules/vpx_dsp/neon-contiguous-unaligned-loads-memcpy-vld1.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-mem-neon-load-store-helpers.md"
+  }
+  capability_groups {
+    path_expression: "vpx_dsp/ppc/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/fuse-vec-pack-and-perm-powerpc.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
@@ -65,6 +135,18 @@ agentic_review {
     rules: "knowledge_base/rules/vpx_dsp/keep-neon-intermediate-sums-in-16-bit.md"
   }
   capability_groups {
+    path_expression: "(?:.*/)?[^/]*_neon\\.[^/]*"
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/match-neon-vector-reinterpret-signedness.md"
+  }
+  capability_groups {
+    path_expression: "vp9/common/arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "knowledge_base/rules/vpx_dsp/neon-wrapping-arithmetic-for-wraplow.md"
+  }
+  capability_groups {
     path_expression: "vp8/.*"
     path_expression: "vp9/.*"
     path_expression: "vpx_dsp/.*"
@@ -73,20 +155,33 @@ agentic_review {
     rules: "knowledge_base/rules/vpx_dsp/pass-simd-vectors-by-value-or-const-pointer.md"
   }
   capability_groups {
-    path_expression: "vp8/(?:.*/)?x86/.*"
-    path_expression: "vp9/(?:.*/)?x86/.*"
-    path_expression: "vpx_dsp/x86/.*"
-    rules: "knowledge_base/rules/vpx_dsp/prefer-unpacklo-epi64-over-loadh-pi.md"
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-neon-rounding-shifts.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vpx_dsp/preserve-tran-high-for-transform-constants.md"
+    rules: "knowledge_base/rules/vpx_dsp/use-transform-shift-constants-over-literals.md"
   }
   capability_groups {
     path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     rules: "knowledge_base/rules/vpx_dsp/unify-high-bitdepth-dsp-metric-functions.md"
   }
   capability_groups {
-    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    rules: "knowledge_base/rules/vpx_dsp/use-mem-neon-load-store-helpers.md"
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "knowledge_base/rules/vpx_dsp/use-128bit-neon-for-4x4-dotprod-blocks.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/vpx_dsp/use-existing-simd-memory-helpers.md"
   }
   capability_groups {
     path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
@@ -95,8 +190,8 @@ agentic_review {
     rules: "knowledge_base/rules/vpx_dsp/use-tran-coef-t-for-transform-constants.md"
   }
   capability_groups {
-    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
-    rules: "knowledge_base/rules/vpx_dsp/use-transform-shift-constants-over-literals.md"
+    path_expression: "vp9/.*"
+    path_expression: "vpx_dsp/.*"
+    rules: "knowledge_base/rules/vpx_dsp/use-tran-low-for-simd-coefficients.md"
   }
 }
