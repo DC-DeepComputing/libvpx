@@ -339,6 +339,7 @@ void vp9_end_first_pass(VP9_COMP *cpi) {
   cpi->twopass.first_pass_done = 1;
   vpx_free(cpi->twopass.fp_mb_float_stats);
   cpi->twopass.fp_mb_float_stats = NULL;
+  cpi->twopass.fp_mb_float_stats_size = 0;
 }
 
 static vpx_variance_fn_t get_block_variance_fn(BLOCK_SIZE bsize) {
@@ -873,6 +874,21 @@ static void accumulate_fp_mb_row_stat(TileDataEnc *this_tile,
           : min_start_row;
 }
 
+// Returns the buffer of |ref_frame| if it can be used for prediction of
+// |frame| in the first pass, or NULL. The first pass does not scale references,
+// so a reference must have the size and layout of |frame|; this is not the
+// case after the coded frame size changes (VP8E_SET_SCALEMODE).
+static YV12_BUFFER_CONFIG *get_first_pass_ref_buffer(
+    VP9_COMP *cpi, MV_REFERENCE_FRAME ref_frame,
+    const YV12_BUFFER_CONFIG *frame) {
+  YV12_BUFFER_CONFIG *const buf = get_ref_frame_buffer(cpi, ref_frame);
+  if (buf == NULL || buf->y_crop_width != frame->y_crop_width ||
+      buf->y_crop_height != frame->y_crop_height ||
+      buf->y_stride != frame->y_stride || buf->uv_stride != frame->uv_stride)
+    return NULL;
+  return buf;
+}
+
 #define NZ_MOTION_PENALTY 128
 #define INTRA_MODE_PENALTY 1024
 void vp9_first_pass_encode_tile_mb_row(VP9_COMP *cpi, ThreadData *td,
@@ -897,9 +913,11 @@ void vp9_first_pass_encode_tile_mb_row(VP9_COMP *cpi, ThreadData *td,
   const MV zero_mv = { 0, 0 };
   int recon_y_stride, recon_uv_stride, uv_mb_height;
 
-  YV12_BUFFER_CONFIG *const lst_yv12 = get_ref_frame_buffer(cpi, LAST_FRAME);
-  YV12_BUFFER_CONFIG *gld_yv12 = get_ref_frame_buffer(cpi, GOLDEN_FRAME);
   YV12_BUFFER_CONFIG *const new_yv12 = get_frame_new_buffer(cm);
+  YV12_BUFFER_CONFIG *const lst_yv12 =
+      get_first_pass_ref_buffer(cpi, LAST_FRAME, new_yv12);
+  YV12_BUFFER_CONFIG *gld_yv12 =
+      get_first_pass_ref_buffer(cpi, GOLDEN_FRAME, new_yv12);
   const YV12_BUFFER_CONFIG *first_ref_buf = lst_yv12;
 
   MODE_INFO mi_above, mi_left;
@@ -912,9 +930,9 @@ void vp9_first_pass_encode_tile_mb_row(VP9_COMP *cpi, ThreadData *td,
   MV *first_top_mv = &tile_data->firstpass_top_mv;
   MV last_nonzero_mv = { 0, 0 };
 
-  // First pass code requires valid last and new frame buffers.
+  // First pass code requires a valid new frame buffer. Without a usable last
+  // frame buffer, all blocks are coded as intra.
   assert(new_yv12 != NULL);
-  assert(frame_is_intra_only(cm) || (lst_yv12 != NULL));
 
   xd->mi = cm->mi_grid_visible + xd->mi_stride * (mb_row << 1) + mb_col_start;
   xd->mi[0] = cm->mi + xd->mi_stride * (mb_row << 1) + mb_col_start;
@@ -1096,7 +1114,7 @@ void vp9_first_pass_encode_tile_mb_row(VP9_COMP *cpi, ThreadData *td,
         ((cm->mb_cols - 1 - mb_col) * 16) + BORDER_MV_PIXELS_B16;
 
     // Other than for intra-only frame do a motion search.
-    if (!frame_is_intra_only(cm)) {
+    if (!frame_is_intra_only(cm) && first_ref_buf != NULL) {
       int tmp_err, motion_error, this_motion_error, raw_motion_error;
       // Assume 0,0 motion with no mv overhead.
       MV mv = { 0, 0 }, tmp_mv = { 0, 0 };
@@ -1356,10 +1374,10 @@ void vp9_first_pass(VP9_COMP *cpi, const struct lookahead_entry *source) {
   MACROBLOCKD *const xd = &x->e_mbd;
   TWO_PASS *twopass = &cpi->twopass;
 
-  YV12_BUFFER_CONFIG *const lst_yv12 = get_ref_frame_buffer(cpi, LAST_FRAME);
   YV12_BUFFER_CONFIG *gld_yv12 = get_ref_frame_buffer(cpi, GOLDEN_FRAME);
   YV12_BUFFER_CONFIG *const new_yv12 = get_frame_new_buffer(cm);
-  const YV12_BUFFER_CONFIG *first_ref_buf = lst_yv12;
+  const YV12_BUFFER_CONFIG *first_ref_buf =
+      get_first_pass_ref_buffer(cpi, LAST_FRAME, new_yv12);
 
   BufferPool *const pool = cm->buffer_pool;
 
@@ -1370,9 +1388,8 @@ void vp9_first_pass(VP9_COMP *cpi, const struct lookahead_entry *source) {
   vp9_zero(fp_temp_data);
   fp_acc_data->image_data_start_row = INVALID_ROW;
 
-  // First pass code requires valid last and new frame buffers.
+  // First pass code requires a valid new frame buffer.
   assert(new_yv12 != NULL);
-  assert(frame_is_intra_only(cm) || (lst_yv12 != NULL));
 
   set_first_pass_params(cpi);
   vp9_set_quantizer(cpi, find_fp_qindex(cm->bit_depth), 0);
@@ -1382,7 +1399,7 @@ void vp9_first_pass(VP9_COMP *cpi, const struct lookahead_entry *source) {
   vp9_setup_src_planes(x, cpi->Source, 0, 0);
   vp9_setup_dst_planes(xd->plane, new_yv12, 0, 0);
 
-  if (!frame_is_intra_only(cm)) {
+  if (!frame_is_intra_only(cm) && first_ref_buf != NULL) {
     vp9_setup_pre_planes(xd, 0, first_ref_buf, 0, 0, NULL);
   }
 
@@ -1398,10 +1415,19 @@ void vp9_first_pass(VP9_COMP *cpi, const struct lookahead_entry *source) {
 
   cm->log2_tile_rows = 0;
 
-  if (cpi->row_mt_bit_exact && cpi->twopass.fp_mb_float_stats == NULL)
+  // The frame size can change between first pass frames (e.g. with
+  // VP8E_SET_SCALEMODE), so the per-MB stats must cover the current frame.
+  if (cpi->row_mt_bit_exact &&
+      (cpi->twopass.fp_mb_float_stats == NULL ||
+       cpi->twopass.fp_mb_float_stats_size < cm->MBs)) {
+    vpx_free(cpi->twopass.fp_mb_float_stats);
+    cpi->twopass.fp_mb_float_stats = NULL;
+    cpi->twopass.fp_mb_float_stats_size = 0;
     CHECK_MEM_ERROR(
         &cm->error, cpi->twopass.fp_mb_float_stats,
         vpx_calloc(cm->MBs * sizeof(*cpi->twopass.fp_mb_float_stats), 1));
+    cpi->twopass.fp_mb_float_stats_size = cm->MBs;
+  }
 
   {
     FIRSTPASS_STATS fps;
