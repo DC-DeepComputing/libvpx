@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f32d9f87_afa25c7b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T17:31:59Z",
+      "side": 1,
+      "message": "Jerome, Marco: To avoid unnecessary complexity to support scenarios our clients don\u0027t need, I suggest we consider requiring libvpx clients to destroy the encoder after `vp9_change_config()` fails with `VPX_CODEC_MEM_ERROR`. Then we have a simpler goal: make it safe to call `vpx_codec_destroy()` in this case.",
+      "revId": "ec14ef65fd342af1f1ef24d926c413a6e117d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
