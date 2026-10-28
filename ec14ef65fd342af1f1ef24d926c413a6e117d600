@@ -16,6 +16,24 @@
       "message": "Jerome, Marco: To avoid unnecessary complexity to support scenarios our clients don\u0027t need, I suggest we consider requiring libvpx clients to destroy the encoder after `vp9_change_config()` fails with `VPX_CODEC_MEM_ERROR`. Then we have a simpler goal: make it safe to call `vpx_codec_destroy()` in this case.",
       "revId": "ec14ef65fd342af1f1ef24d926c413a6e117d600",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b4300e68_90532c4a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 5237009
+      },
+      "writtenOn": "2026-10-28T17:44:32Z",
+      "side": 1,
+      "message": "A data point for that: with only the parent change (8571539), vpx_codec_destroy() is already safe after this failure; ConfigResizeAllocFailureVp9 checks it. A client that keeps the encoder instead can crash: on i386 with ASan, 64x64 -\u003e 46340x46340 (VPX_CODEC_MEM_ERROR) -\u003e vpx_codec_enc_config_set() back to 64x64 writes through NULL in vp9_enc_setup_mi() (vp9_change_config -\u003e update_frame_size -\u003e vp9_init_context_buffers). So with that requirement, the encoder would still need to refuse its other calls after the error to keep a client that misses it safe.\n\nThis CL refuses encode and the controls that use these buffers while realloc_pending is set, and lets a later config_set retry the reallocation.",
+      "parentUuid": "f32d9f87_afa25c7b",
+      "revId": "ec14ef65fd342af1f1ef24d926c413a6e117d600",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
