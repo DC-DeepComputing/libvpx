@@ -26,6 +26,30 @@
     {
       "unresolved": false,
       "key": {
+        "uuid": "0d2e55ab_c7a8e409",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 3381,
+      "author": {
+        "id": 1126910
+      },
+      "writtenOn": "2026-10-28T22:20:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55bf9713_78078764",
+      "range": {
+        "startLine": 3375,
+        "startChar": 0,
+        "endLine": 3381,
+        "endChar": 58
+      },
+      "revId": "da4c178d472e6eb6232a64471090cdf5bf3b2fe7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
         "uuid": "9cef87ea_c8245709",
         "filename": "test/encode_api_test.cc",
         "patchSetId": 6
