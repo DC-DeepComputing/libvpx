@@ -422,6 +422,24 @@ static vpx_codec_err_t validate_img(vpx_codec_alg_priv_t *ctx,
         "format");
   }
 
+  if (img->fmt & VPX_IMG_FMT_HIGHBITDEPTH) {
+    // In image2yuvconfig(), high bit-depth plane pointers are stored via
+    // CONVERT_TO_BYTEPTR(x) (which right-shifts the pointer address by 1,
+    // silently discarding bit 0) and later recovered via
+    // CONVERT_TO_SHORTPTR(x) (which left-shifts by 1). Similarly, the byte
+    // strides y_stride and uv_stride are halved via >>= 1.
+    // If any plane pointer or byte stride is odd (not 2-byte aligned),
+    // validate_img() below would validate 16-bit samples at the unaligned
+    // address/stride while the encoder actually consumes the 1-byte-shifted
+    // view of the buffer, allowing out-of-range samples (>= 1 << bit_depth)
+    // to bypass validation and reach the high bit-depth quantizers.
+    for (int plane = 0; plane < 3; ++plane) {
+      if ((((uintptr_t)img->planes[plane]) & 1) || (img->stride[plane] & 1)) {
+        ERROR("High bit-depth image planes and strides must be 2-byte aligned");
+      }
+    }
+  }
+
   if (ctx->extra_cfg.validate_hbd_input &&
       (img->fmt & VPX_IMG_FMT_HIGHBITDEPTH)) {
     const unsigned int h = img->d_h;
