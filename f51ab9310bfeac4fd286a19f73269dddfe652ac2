@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9a21dfba_65bea489",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 2050,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T17:27:28Z",
+      "side": 1,
+      "message": "Nit: No need to add this blank line.",
+      "revId": "f51ab9310bfeac4fd286a19f73269dddfe652ac2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "85e5ef83_13a0c3ed",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 3912,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T17:27:28Z",
+      "side": 1,
+      "message": "Change this line to call the function rather than access the global variable:\n\n```\n  vpx_codec_iface_t *const iface \u003d vpx_codec_vp9_cx();\n```",
+      "revId": "f51ab9310bfeac4fd286a19f73269dddfe652ac2",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
