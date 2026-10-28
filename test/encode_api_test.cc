@@ -1212,6 +1212,234 @@ TEST(EncodeAPI, SetReferenceValidationVp9) {
   vpx_img_free(ref_img);
   EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
+
+// VP8_SET_REFERENCE and VP8_COPY_REFERENCE must reject an image whose size or
+// format differs from the reference frame.
+TEST(EncodeAPI, SetReferenceSizeValidationVp9) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 128;
+  cfg.g_h = 128;
+  cfg.g_lag_in_frames = 0;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  const struct {
+    vpx_img_fmt_t fmt;
+    unsigned int width;
+    unsigned int height;
+  } kInvalidImages[] = {
+    { VPX_IMG_FMT_I420, 256, 256 }, { VPX_IMG_FMT_I420, 64, 64 },
+    { VPX_IMG_FMT_I420, 128, 64 },  { VPX_IMG_FMT_I420, 64, 128 },
+    { VPX_IMG_FMT_I444, 128, 128 },
+  };
+  for (const auto &invalid : kInvalidImages) {
+    vpx_image_t *const ref_img =
+        CreateImage(VPX_BITS_8, invalid.fmt, invalid.width, invalid.height);
+    ASSERT_NE(ref_img, nullptr);
+    vpx_ref_frame_t ref_frame;
+    ref_frame.frame_type = VP8_LAST_FRAME;
+    ref_frame.img = *ref_img;
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_SET_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM);
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM);
+    vpx_img_free(ref_img);
+  }
+
+  vpx_img_free(img);
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// An image of the frame size works with VP8_SET_REFERENCE and
+// VP8_COPY_REFERENCE even when its width and height are not a multiple of the
+// alignment of the reference frame.
+TEST(EncodeAPI, SetAndCopyReferenceUnalignedSizeVp9) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 100;
+  cfg.g_h = 98;
+  cfg.g_lag_in_frames = 0;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  libvpx_test::ACMRandom rng;
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h, &rng);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  vpx_ref_frame_t ref_frame;
+  ref_frame.frame_type = VP8_LAST_FRAME;
+  ref_frame.img = *img;
+  EXPECT_EQ(vpx_codec_control(&enc, VP8_SET_REFERENCE, &ref_frame),
+            VPX_CODEC_OK);
+
+  vpx_image_t *const copy =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(copy, nullptr);
+  ref_frame.img = *copy;
+  EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+            VPX_CODEC_OK);
+  for (int plane = 0; plane < 3; ++plane) {
+    const int shift = plane == 0 ? 0 : 1;
+    const unsigned int w = (img->d_w + shift) >> shift;
+    const unsigned int h = (img->d_h + shift) >> shift;
+    for (unsigned int y = 0; y < h; ++y) {
+      ASSERT_EQ(memcmp(copy->planes[plane] + y * copy->stride[plane],
+                       img->planes[plane] + y * img->stride[plane], w),
+                0)
+          << "plane " << plane << " row " << y;
+    }
+  }
+
+  vpx_img_free(copy);
+  vpx_img_free(img);
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+#endif  // CONFIG_VP9_ENCODER
+
+// VP8_COPY_REFERENCE must write only inside the caller's image. The image is
+// wrapped in a larger buffer whose surrounding bytes must stay untouched.
+void CopyReferenceStaysInImage(vpx_codec_iface_t *iface) {
+  constexpr int kWidth = 96;
+  constexpr int kHeight = 96;
+  constexpr int kGuard = 8192;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  cfg.g_lag_in_frames = 0;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, kWidth, kHeight);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  // With a stride alignment of 64 the stride is larger than the width.
+  constexpr int kStride = 128;
+  constexpr int kImageSize =
+      kStride * kHeight + 2 * (kStride / 2) * (kHeight / 2);
+  std::vector<uint8_t> buf(kGuard + kImageSize + kGuard, 0xAA);
+  memset(buf.data() + kGuard, 0, kImageSize);
+  vpx_image_t ref_img;
+  ASSERT_NE(vpx_img_wrap(&ref_img, VPX_IMG_FMT_I420, kWidth, kHeight, 64,
+                         buf.data() + kGuard),
+            nullptr);
+  ASSERT_EQ(ref_img.stride[VPX_PLANE_Y], kStride);
+
+  vpx_ref_frame_t ref_frame;
+  ref_frame.frame_type = VP8_LAST_FRAME;
+  ref_frame.img = ref_img;
+  EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+            VPX_CODEC_OK);
+
+  int changed = 0;
+  for (int i = 0; i < kGuard; ++i) {
+    changed += buf[i] != 0xAA;
+    changed += buf[kGuard + kImageSize + i] != 0xAA;
+  }
+  EXPECT_EQ(changed, 0);
+
+  vpx_img_free(img);
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+#if CONFIG_VP8_ENCODER
+TEST(EncodeAPI, CopyReferenceStaysInImageVp8) {
+  CopyReferenceStaysInImage(vpx_codec_vp8_cx());
+}
+#endif  // CONFIG_VP8_ENCODER
+
+#if CONFIG_VP9_ENCODER
+TEST(EncodeAPI, CopyReferenceStaysInImageVp9) {
+  CopyReferenceStaysInImage(vpx_codec_vp9_cx());
+}
+#endif  // CONFIG_VP9_ENCODER
+
+// VP8_SET_REFERENCE and VP8_COPY_REFERENCE must reject an image whose U and V
+// strides differ: the image is converted to a YV12_BUFFER_CONFIG, which keeps
+// only the U stride.
+void SetAndCopyReferenceUnequalUVStrides(vpx_codec_iface_t *iface) {
+  constexpr int kWidth = 64;
+  constexpr int kHeight = 64;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = kWidth;
+  cfg.g_h = kHeight;
+  cfg.g_lag_in_frames = 0;
+  vpx_codec_ctx_t enc;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, kWidth, kHeight);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&enc, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+
+  // An image of the frame size in a buffer that holds exactly its planes.
+  std::vector<uint8_t> buf(kWidth * kHeight * 3 / 2);
+  vpx_image_t ref_img;
+  ASSERT_NE(
+      vpx_img_wrap(&ref_img, VPX_IMG_FMT_I420, kWidth, kHeight, 1, buf.data()),
+      nullptr);
+  const int uv_stride = ref_img.stride[VPX_PLANE_U];
+  ASSERT_EQ(ref_img.stride[VPX_PLANE_V], uv_stride);
+
+  const struct {
+    int u_stride;
+    int v_stride;
+  } kUVStrides[] = { { uv_stride + 16, uv_stride },
+                     { uv_stride, uv_stride + 16 } };
+  vpx_ref_frame_t ref_frame;
+  ref_frame.frame_type = VP8_LAST_FRAME;
+  for (const auto &strides : kUVStrides) {
+    ref_frame.img = ref_img;
+    ref_frame.img.stride[VPX_PLANE_U] = strides.u_stride;
+    ref_frame.img.stride[VPX_PLANE_V] = strides.v_stride;
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_SET_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM)
+        << "U stride: " << strides.u_stride
+        << ", V stride: " << strides.v_stride;
+    EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+              VPX_CODEC_INVALID_PARAM)
+        << "U stride: " << strides.u_stride
+        << ", V stride: " << strides.v_stride;
+  }
+
+  // The same image with equal U and V strides is accepted.
+  ref_frame.img = ref_img;
+  EXPECT_EQ(vpx_codec_control(&enc, VP8_SET_REFERENCE, &ref_frame),
+            VPX_CODEC_OK);
+  EXPECT_EQ(vpx_codec_control(&enc, VP8_COPY_REFERENCE, &ref_frame),
+            VPX_CODEC_OK);
+
+  vpx_img_free(img);
+  EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+#if CONFIG_VP8_ENCODER
+TEST(EncodeAPI, SetAndCopyReferenceUnequalUVStridesVp8) {
+  SetAndCopyReferenceUnequalUVStrides(vpx_codec_vp8_cx());
+}
+#endif  // CONFIG_VP8_ENCODER
+
+#if CONFIG_VP9_ENCODER
+TEST(EncodeAPI, SetAndCopyReferenceUnequalUVStridesVp9) {
+  SetAndCopyReferenceUnequalUVStrides(vpx_codec_vp9_cx());
+}
 #endif  // CONFIG_VP9_ENCODER
 
 // Set up 2 spatial streams with 2 temporal layers per stream, and generate
