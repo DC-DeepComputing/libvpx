@@ -2707,7 +2707,7 @@ void vp9_pick_inter_mode(VP9_COMP *cpi, MACROBLOCK *x, TileDataEnc *tile_data,
 #if CONFIG_VP9_TEMPORAL_DENOISING
   if (cpi->oxcf.noise_sensitivity > 0 && cpi->resize_pending == 0 &&
       denoise_svc_pickmode && cpi->denoiser.denoising_level > kDenLowLow &&
-      cpi->denoiser.reset == 0) {
+      cpi->denoiser.reset == 0 && !vp9_denoiser_layer_refresh_pending(cpi)) {
     VP9_DENOISER_DECISION decision = COPY_BLOCK;
     ctx->sb_skip_denoising = 0;
     // TODO(marpan): There is an issue with denoising when the

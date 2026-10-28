@@ -48,6 +48,9 @@ typedef struct vp9_denoiser {
   YV12_BUFFER_CONFIG last_source;
   int frame_buffer_initialized;
   int reset;
+  // Per denoised SVC layer: its buffers were reallocated and are refreshed
+  // from the source on the next frame of that layer.
+  int layer_refresh[2];
   int num_ref_frames;
   int num_layers;
   // Whether the buffers were allocated for SVC mode.
@@ -93,6 +96,16 @@ int vp9_denoiser_realloc_svc(VP9_COMMON *cm, VP9_DENOISER *denoiser,
                              struct SVC *svc, int svc_buf_shift,
                              int refresh_alt, int refresh_gld, int refresh_lst,
                              int alt_fb_idx, int gld_fb_idx, int lst_fb_idx);
+
+// Gives the buffers of denoiser layer |layer| (0 is the top spatial layer) the
+// coded frame size of that spatial layer. Returns nonzero on allocation
+// failure, after which the denoiser is freed.
+int vp9_denoiser_realloc_svc_layer(VP9_COMMON *cm, VP9_DENOISER *denoiser,
+                                   int layer);
+
+// Returns nonzero when the buffers of the denoised layer being coded wait for
+// their refresh from the source, so they must not be used for denoising.
+int vp9_denoiser_layer_refresh_pending(const struct VP9_COMP *const cpi);
 
 int vp9_denoiser_alloc(VP9_COMMON *cm, struct SVC *svc, VP9_DENOISER *denoiser,
                        int use_svc, int noise_sen, int width, int height,
