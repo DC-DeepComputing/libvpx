@@ -1,0 +1,76 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "752aac80_daff424c",
+        "filename": "vp9/encoder/vp9_encoder.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2190,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-28T15:46:39Z",
+      "side": 1,
+      "message": "If a failed resize frees the context buffers and a subsequent config change recovers to a smaller resolution than `last_coded_width`x`last_coded_height`, entering this block via `retry_realloc` overwrites `cpi-\u003eexternal_resize \u003d 0` even when the next frame is a scaled inter frame. Also, if a downscale failed in the second block below, the context buffers here were never freed.\n\nConsider zeroing `cpi-\u003einitial_width` and `cpi-\u003einitial_height` before `vp9_free_context_buffers(cm)` (so `!cpi-\u003einitial_width || !cpi-\u003einitial_height` triggers reallocation on retry without needing `retry_realloc` here) and keeping `cpi-\u003eexternal_resize \u003d 1` when `cm-\u003ewidth !\u003d cpi-\u003elast_coded_width || cm-\u003eheight !\u003d cpi-\u003elast_coded_height`.",
+      "range": {
+        "startLine": 2176,
+        "startChar": 0,
+        "endLine": 2190,
+        "endChar": 9999
+      },
+      "isAi": true,
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d4ec3f99_99a13cc4",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-28T15:46:39Z",
+      "side": 1,
+      "message": "When `vp9_change_config()` fails, `ctx-\u003ecfg` and `cm-\u003eprofile` have already been updated and `cm-\u003eprev_mip` / `cm-\u003elast_frame_seg_map` freed, but `if (force_key) ctx-\u003enext_frame_flags |\u003d VPX_EFLAG_FORCE_KF;` at line 924 is skipped. A subsequent recovery to the original/downscaled size (or retrying the same `cfg`, where `cfg-\u003eg_w \u003d\u003d ctx-\u003ecfg.g_w`) then leaves `force_key \u003d\u003d 0`.\n\nSet `if (force_key) ctx-\u003enext_frame_flags |\u003d VPX_EFLAG_FORCE_KF;` before calling `vp9_change_config()`, and also check `ctx-\u003ecpi-\u003erealloc_pending` in the size-change condition at line 873.",
+      "range": {
+        "startLine": 873,
+        "startChar": 0,
+        "endLine": 925,
+        "endChar": 9999
+      },
+      "isAi": true,
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f096973c_bcc049d7",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1905,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-10-28T15:46:39Z",
+      "side": 1,
+      "message": "`ctrl_set_roi_map`, `ctrl_set_active_map`, `ctrl_get_active_map`, and `ctrl_set_scale_mode` directly access `cm-\u003emip`, `cpi-\u003embmi_ext_base`, `cpi-\u003eactive_map.map`, and `cpi-\u003esegmentation_map` without calling `update_extra_cfg()`. Guard them with `if (ctx-\u003ecpi-\u003erealloc_pending) return VPX_CODEC_ERROR;` like `encoder_encode()`.",
+      "range": {
+        "startLine": 1854,
+        "startChar": 0,
+        "endLine": 1905,
+        "endChar": 9999
+      },
+      "isAi": true,
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
