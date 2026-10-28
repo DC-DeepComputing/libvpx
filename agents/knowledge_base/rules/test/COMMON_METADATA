@@ -9,6 +9,20 @@
 agentic_review {
   capability_groups {
     path_expression: "test/.*"
+    rules: "agents/knowledge_base/rules/test/avoid-redundant-assertions-after-exact-equality.md"
+    rules: "agents/knowledge_base/rules/test/avoid-underscores-in-googletest-names.md"
+    rules: "agents/knowledge_base/rules/test/call-reset-model-before-custom-test-parameters.md"
+    rules: "agents/knowledge_base/rules/test/disable-unfixed-bug-reproducer-tests.md"
+    rules: "agents/knowledge_base/rules/test/ensure-encoder-test-inputs-match-bit-depth-range.md"
     rules: "agents/knowledge_base/rules/test/extract-duplicate-test-bodies-into-helpers.md"
+    rules: "agents/knowledge_base/rules/test/guard-psnr-test-expectations-with-config-internal-stats.md"
+    rules: "agents/knowledge_base/rules/test/initialize-allocated-test-image-planes.md"
+    rules: "agents/knowledge_base/rules/test/name-bug-regression-tests-with-issue-id.md"
+    rules: "agents/knowledge_base/rules/test/override-fillframe-in-dummyvideosource-subclasses.md"
+    rules: "agents/knowledge_base/rules/test/place-tested-expression-first-in-assertions.md"
+    rules: "agents/knowledge_base/rules/test/register-test-data-in-mk-and-sha1.md"
+    rules: "agents/knowledge_base/rules/test/test-dynamic-resizing-transition-permutations.md"
+    rules: "agents/knowledge_base/rules/test/use-minimal-dimensions-for-overflow-tests.md"
+    rules: "agents/knowledge_base/rules/test/use-randomvideosource-for-randomized-test-frames.md"
   }
 }

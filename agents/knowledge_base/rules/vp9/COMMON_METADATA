@@ -8,15 +8,146 @@
 
 agentic_review {
   capability_groups {
+    path_expression: "vp9/.*"
+    path_expression: "vpx/.*"
+    path_expression: "vpx_scale/.*"
+    rules: "agents/knowledge_base/rules/vp9/account-for-high-bit-depth-in-buffer-allocation.md"
+  }
+  capability_groups {
     path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/apply-external-rc-qp-in-tpl-pass-across-modes.md"
+    rules: "agents/knowledge_base/rules/vp9/check-segment-id-when-overriding-segmentation-features.md"
+    rules: "agents/knowledge_base/rules/vp9/configure-reference-refresh-flags-early.md"
     rules: "agents/knowledge_base/rules/vp9/configure-speed-heuristics-in-speed-features.md"
     rules: "agents/knowledge_base/rules/vp9/differentiate-layer-depth-for-gf-vs-overlay-update.md"
+    rules: "agents/knowledge_base/rules/vp9/do-not-exclude-keyframes-when-gating-gop-tpl-stats.md"
+    rules: "agents/knowledge_base/rules/vp9/encapsulate-rate-control-in-rate-control-struct.md"
+    rules: "agents/knowledge_base/rules/vp9/factor-svc-layer-context-checks-into-helpers.md"
+    rules: "agents/knowledge_base/rules/vp9/gate-highbitdepth-features-with-runtime-flag.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-background-skip-after-key-frame.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-svc-reference-buffer-index-assignment.md"
+    rules: "agents/knowledge_base/rules/vp9/index-frame-buffers-in-multi-frame-loops.md"
+    rules: "agents/knowledge_base/rules/vp9/no-mode-info-checks-prior-to-rdo.md"
+    rules: "agents/knowledge_base/rules/vp9/omit-redundant-config-checks-at-feature-callsites.md"
+    rules: "agents/knowledge_base/rules/vp9/override-gop-params-with-external-rate-control.md"
+    rules: "agents/knowledge_base/rules/vp9/reuse-svc-per-layer-dimension-arrays.md"
+    rules: "agents/knowledge_base/rules/vp9/skip-prediction-buffer-setup-on-final-iteration.md"
     rules: "agents/knowledge_base/rules/vp9/support-updating-arbitrary-svc-reference-buffer-slots.md"
     rules: "agents/knowledge_base/rules/vp9/validate-simulcast-layer-limits.md"
+    rules: "agents/knowledge_base/rules/vp9/vp9-encoder-context-parameter-constness.md"
+    rules: "agents/knowledge_base/rules/vp9/vp9-guard-base-layer-keyframe-in-svc-simulcast.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/vp9/assert-implicit-bitstream-format-invariants.md"
+  }
+  capability_groups {
+    path_expression: "vp8/decoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp8/vp8_dx_iface\\.c"
+    path_expression: "vp9/decoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/vp9_dx_iface\\.c"
+    rules: "agents/knowledge_base/rules/vp9/avoid-out-of-band-header-decryption.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/avoid-redundant-context-struct-fields.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/avoid-redundant-speed-feature-assignments.md"
+    rules: "agents/knowledge_base/rules/vp9/calculate-percentage-error-relative-to-target-baseline.md"
+    rules: "agents/knowledge_base/rules/vp9/condition-reference-thresholds-on-mode-validity.md"
+    rules: "agents/knowledge_base/rules/vp9/default-baseline-speed-features-to-disabled.md"
+    rules: "agents/knowledge_base/rules/vp9/dispatch-reference-buffer-remapping-by-frame-type.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-feature-routines-with-speed-flags.md"
+    rules: "agents/knowledge_base/rules/vp9/match-predictor-stride-in-block-subtraction.md"
+    rules: "agents/knowledge_base/rules/vp9/place-rate-control-logic-in-ratectrl-module.md"
+    rules: "agents/knowledge_base/rules/vp9/standard-reference-frame-terminology.md"
+    rules: "agents/knowledge_base/rules/vp9/update-counterpart-encoder-mode-decision-routines.md"
+    rules: "agents/knowledge_base/rules/vp9/vp9-preserve-active-parameter-overrides-during-refactoring.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/avoid-reference-reordering-in-tpl-estimation.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-svc-gf-temporal-ref-updates.md"
+    rules: "agents/knowledge_base/rules/vp9/sync-svc-reference-flags-and-buffer-indices.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/bypass-decision-logic-only-on-active-runtime-override.md"
+    rules: "agents/knowledge_base/rules/vp9/encapsulate-optimization-decisions-in-helpers.md"
+    rules: "agents/knowledge_base/rules/vp9/group-coupled-speed-features-into-control-structs.md"
+    rules: "agents/knowledge_base/rules/vp9/operate-on-single-frame-in-buffer-analysis-helpers.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    rules: "agents/knowledge_base/rules/vp9/cache-encoder-state-before-destruction.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/check-first-spatial-layer-to-encode-for-svc-superframe-start.md"
+    rules: "agents/knowledge_base/rules/vp9/initialize-svc-flags-before-rate-control-updates.md"
+    rules: "agents/knowledge_base/rules/vp9/set-gf-update-before-vbr-target-size.md"
+    rules: "agents/knowledge_base/rules/vp9/update-cyclic-refresh-parameters-before-qp-selection.md"
+    rules: "agents/knowledge_base/rules/vp9/verify-nonzero-reference-dimensions-before-scaling-check.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    rules: "agents/knowledge_base/rules/vp9/check-zero-initialized-dimensions-with-truthiness.md"
+    rules: "agents/knowledge_base/rules/vp9/name-reference-refresh-functions.md"
+  }
+  capability_groups {
+    path_expression: "vp9/.*"
+    rules: "agents/knowledge_base/rules/vp9/compute-canonical-sb-dimensions-without-padding.md"
+    rules: "agents/knowledge_base/rules/vp9/derive-block-dimensions-from-block-size-lookups.md"
+    rules: "agents/knowledge_base/rules/vp9/reserve-yv12-naming-for-yv12-buffer-config.md"
+    rules: "agents/knowledge_base/rules/vp9/use-inline-helpers-for-lookup-tables.md"
+    rules: "agents/knowledge_base/rules/vp9/use-invalid-mv-for-motion-vector-sentinels.md"
+    rules: "agents/knowledge_base/rules/vp9/use-vp9-is-valid-scale-after-scale-setup.md"
   }
   capability_groups {
     path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/distinguish-rc-mode-from-deadline-mode.md"
     rules: "agents/knowledge_base/rules/vp9/guard-external-buffer-release-callbacks.md"
+    rules: "agents/knowledge_base/rules/vp9/initialize-vp9-rtc-rc-kf-boost.md"
+    rules: "agents/knowledge_base/rules/vp9/worker-data-suffix-for-thread-context-structs.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    rules: "agents/knowledge_base/rules/vp9/distinguish-superframe-from-key-frame-terminology.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/exclude-dc-coefficient-when-computing-transform-ac-variance.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "agents/knowledge_base/rules/vp9/force-refresh-longterm-ref-on-denoiser-reset.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-denoiser-calls-with-noise-sensitivity.md"
+    rules: "agents/knowledge_base/rules/vp9/guard-svc-reference-updates-against-standard-updates.md"
+    rules: "agents/knowledge_base/rules/vp9/preserve-pre-encode-overshoot-detection-when-post-encode-dro.md"
+    rules: "agents/knowledge_base/rules/vp9/scope-svc-checks-in-temporal-denoising.md"
+    rules: "agents/knowledge_base/rules/vp9/separate-mode-guards-from-shared-encoder-logic.md"
+    rules: "agents/knowledge_base/rules/vp9/update-svc-reference-buffers-on-simulcast-delta-frames.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/guard-all-layering-branches-against-zero-division.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/guard-delta-frame-branches-when-key-frame-modes-bypass.md"
   }
   capability_groups {
     path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
@@ -24,9 +155,40 @@ agentic_review {
     rules: "agents/knowledge_base/rules/vp9/guard-svc-state-with-use-svc.md"
   }
   capability_groups {
+    path_expression: "examples/(?:.*/)?[^/]*\\.(?:c|cc|cpp)"
+    path_expression: "test/(?:.*/)?[^/]*\\.(?:c|cc|cpp)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "agents/knowledge_base/rules/vp9/include-all-reference-slots-in-svc-update-masks.md"
+  }
+  capability_groups {
+    path_expression: "vp9/decoder/.*"
+    rules: "agents/knowledge_base/rules/vp9/mark-sync-progress-on-early-abort.md"
+    rules: "agents/knowledge_base/rules/vp9/queue-dependent-jobs-before-signaling-completion-map.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/vp9/order-conditional-enum-modes-before-internal-modes.md"
+  }
+  capability_groups {
     path_expression: "vp8/encoder/.*"
+    path_expression: "vp8/vp8_ratectrl_rtc\\.cc"
     path_expression: "vp9/encoder/.*"
-    rules: "agents/knowledge_base/rules/vp9/place-rate-control-logic-in-ratectrl-module.md"
+    path_expression: "vp9/ratectrl_rtc\\.cc"
+    rules: "agents/knowledge_base/rules/vp9/round-floating-point-framerate-in-rate-control.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/vp9/size-bitstream-buffers-from-oxcf-dimensions.md"
+    rules: "agents/knowledge_base/rules/vp9/trim-tpl-gop-stats-in-forward-order.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp8/vp8_cx_iface\\.c"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/vp9_cx_iface\\.c"
+    rules: "agents/knowledge_base/rules/vp9/suffix-onepass-encoder-fields-with-onepass.md"
   }
   capability_groups {
     path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
@@ -34,7 +196,13 @@ agentic_review {
     rules: "agents/knowledge_base/rules/vp9/sync-mirrored-rate-control-heuristics.md"
   }
   capability_groups {
-    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
-    rules: "agents/knowledge_base/rules/vp9/sync-svc-reference-flags-and-buffer-indices.md"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/ratectrl_rtc\\.[^/]*"
+    rules: "agents/knowledge_base/rules/vp9/update-frame-drop-tracking-state-flags.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "agents/knowledge_base/rules/vp9/vp9-use-active-dimensions-for-buffer-realloc.md"
   }
 }
