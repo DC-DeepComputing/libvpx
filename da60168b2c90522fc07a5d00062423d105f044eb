@@ -25,6 +25,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "da8fa545_f91e7f44",
+        "filename": "vp9/encoder/vp9_encoder.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2190,
+      "author": {
+        "id": 5237009
+      },
+      "writtenOn": "2026-10-28T16:20:21Z",
+      "side": 1,
+      "message": "Done. initial_width and initial_height are now zeroed before vp9_free_context_buffers() and set again after realloc_segmentation_maps(), so this block is redone only if it was the step that failed; a failure in the second block keeps the context buffers.\n\nOne difference from your suggestion: the zero check is gated on the pending reallocation (retry_initial_alloc). init_config() calls vp9_change_config() before vp9_create_compressor() sets initial_width, so a bare !initial_width would also free and reallocate these buffers on every encoder creation.\n\nOn that retry, external_resize now stays 1 when the size differs from last_coded_width x last_coded_height. The usual path, a size above the initial one, still sets 0, since encoder_set_config() always forces a key frame for it.",
+      "parentUuid": "752aac80_daff424c",
+      "range": {
+        "startLine": 2176,
+        "startChar": 0,
+        "endLine": 2190,
+        "endChar": 9999
+      },
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d4ec3f99_99a13cc4",
@@ -49,6 +73,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "da4b4868_bfe17f6e",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 5237009
+      },
+      "writtenOn": "2026-10-28T16:20:21Z",
+      "side": 1,
+      "message": "Done. The key frame is now requested before vp9_change_config(), and realloc_pending is part of the size-change condition, so retrying the same cfg goes through the same checks. The test now checks that the first frame encoded after the recovery is a key frame.",
+      "parentUuid": "d4ec3f99_99a13cc4",
+      "range": {
+        "startLine": 873,
+        "startChar": 0,
+        "endLine": 925,
+        "endChar": 9999
+      },
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f096973c_bcc049d7",
@@ -69,6 +117,30 @@
         "endChar": 9999
       },
       "isAi": true,
+      "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "946cb5e1_df25101d",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1905,
+      "author": {
+        "id": 5237009
+      },
+      "writtenOn": "2026-10-28T16:20:21Z",
+      "side": 1,
+      "message": "Done: all four now return VPX_CODEC_ERROR while realloc_pending is set. I gave ctrl_set_rtc_external_ratectrl() the same guard, since it writes cpi-\u003ecyclic_refresh-\u003econtent_mode and cpi-\u003ecyclic_refresh is NULL when its allocation is the one that failed. The other controls that bypass update_extra_cfg() only touch state the reallocation doesn\u0027t free. The test checks all five.",
+      "parentUuid": "f096973c_bcc049d7",
+      "range": {
+        "startLine": 1854,
+        "startChar": 0,
+        "endLine": 1905,
+        "endChar": 9999
+      },
       "revId": "da60168b2c90522fc07a5d00062423d105f044eb",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
