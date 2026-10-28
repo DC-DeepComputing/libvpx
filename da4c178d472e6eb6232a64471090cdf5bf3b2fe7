@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "55bf9713_78078764",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 3381,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T22:13:57Z",
+      "side": 1,
+      "message": "Nit: Omit the second paragraph (lines 3375-3381). Too much detail that may no longer hold as the code base evolves.",
+      "range": {
+        "startLine": 3375,
+        "startChar": 0,
+        "endLine": 3381,
+        "endChar": 58
+      },
+      "revId": "da4c178d472e6eb6232a64471090cdf5bf3b2fe7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9cef87ea_c8245709",
+        "filename": "test/encode_api_test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 3498,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T22:13:57Z",
+      "side": 1,
+      "message": "Optional: If I understand it correctly, the elaborate setup in the test is required to make the test fail without UBSan. In my opinion, a simpler test should suffice if we run it under UBSan and configure UBSan to warn about unaligned access (which I think is the default).",
+      "revId": "da4c178d472e6eb6232a64471090cdf5bf3b2fe7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a6078399_eb124a35",
+        "filename": "vp9/vp9_cx_iface.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-28T22:13:57Z",
+      "side": 1,
+      "message": "Nit: Delete the verbose comment written by the AI tool. The reason we need to do this is obvious. Also, the error message at line 438 explains why.\n\nIf we want a comment, a short comment like the following suffices:\n\n```\n    // Validate that it is safe to cast each row pointer to `unsigned short *`.\n```",
+      "revId": "da4c178d472e6eb6232a64471090cdf5bf3b2fe7",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
