@@ -1,0 +1,34 @@
+# Copyright (c) 2026 The WebM project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+agentic_review {
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp8/apply-rate-control-overflow-fixes-to-counterpart-routines.md"
+  }
+  capability_groups {
+    path_expression: "vp8/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/keep-encoder-decoder-specific-types-out-of-common.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    rules: "knowledge_base/rules/vp8/symmetric-cpu-used-range-check.md"
+  }
+  capability_groups {
+    path_expression: "examples/.*"
+    path_expression: "test/.*"
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    rules: "knowledge_base/rules/vp8/use-vp8-vp9-zero-macros.md"
+  }
+}

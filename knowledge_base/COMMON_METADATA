@@ -12,12 +12,159 @@ agentic_review {
     path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_scale/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/advance-row-pointer-by-stride-in-2d-traversal.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    rules: "knowledge_base/rules/general/annotate-closing-endif-with-condition-comment.md"
+    rules: "knowledge_base/rules/general/avoid-hungarian-notation-and-type-prefixes.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-else-after-return.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-null-checks-on-element-addresses.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-parentheses-around-function-arguments.md"
+    rules: "knowledge_base/rules/general/chain-preprocessor-conditionals-with-elif.md"
+    rules: "knowledge_base/rules/general/check-allocation-return-for-null.md"
+    rules: "knowledge_base/rules/general/colocate-explanatory-comments-with-code.md"
+    rules: "knowledge_base/rules/general/const-for-unmodified-local-variables.md"
+    rules: "knowledge_base/rules/general/delineate-group-comments-with-section-dividers.md"
+    rules: "knowledge_base/rules/general/direct-boolean-assignment.md"
+    rules: "knowledge_base/rules/general/document-enum-values-and-modes.md"
+    rules: "knowledge_base/rules/general/document-functions-at-declaration-not-call-sites.md"
+    rules: "knowledge_base/rules/general/document-hardcoded-limits-and-bounds-checks.md"
+    rules: "knowledge_base/rules/general/document-non-obvious-function-parameters.md"
+    rules: "knowledge_base/rules/general/document-special-case-logic-and-feature-interactions.md"
+    rules: "knowledge_base/rules/general/document-struct-field-scope-and-purpose.md"
+    rules: "knowledge_base/rules/general/multiply-element-count-by-sizeof-for-buffers.md"
+    rules: "knowledge_base/rules/general/named-constants-for-block-dimensions.md"
+    rules: "knowledge_base/rules/general/no-trailing-underscores-on-parameters-or-locals.md"
+    rules: "knowledge_base/rules/general/omit-redundant-parentheses-in-sizeof.md"
+    rules: "knowledge_base/rules/general/prefer-else-if-for-mutually-exclusive-conditions.md"
+    rules: "knowledge_base/rules/general/prefer-enums-for-discrete-states.md"
+    rules: "knowledge_base/rules/general/prefer-plain-int-for-local-variables.md"
+    rules: "knowledge_base/rules/general/prefix-local-header-includes-with-dot-slash.md"
+    rules: "knowledge_base/rules/general/reset-pointers-to-null-after-free.md"
+    rules: "knowledge_base/rules/general/return-invalid-param-for-null-caller-pointers.md"
+    rules: "knowledge_base/rules/general/reuse-dedicated-cleanup-helpers.md"
+    rules: "knowledge_base/rules/general/set-error-info-setjmp-after-setjmp.md"
+    rules: "knowledge_base/rules/general/use-active-verbs-for-function-names.md"
+    rules: "knowledge_base/rules/general/use-curly-braces-on-loops-and-conditionals.md"
+    rules: "knowledge_base/rules/general/use-size-t-for-buffer-and-allocation-sizes.md"
+    rules: "knowledge_base/rules/general/validate-enum-range-before-casting.md"
+    rules: "knowledge_base/rules/general/wrap-block-macros-in-do-while-zero.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "knowledge_base/rules/general/annotate-temporary-workarounds-with-todo.md"
+    rules: "knowledge_base/rules/general/assert-documented-invariants-and-preconditions.md"
+    rules: "knowledge_base/rules/general/avoid-comments-restating-identifier-names.md"
+    rules: "knowledge_base/rules/general/avoid-duplicating-driver-and-loop-functions.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-boolean-comparisons.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-checks-on-compile-time-constants.md"
+    rules: "knowledge_base/rules/general/avoid-redundant-nested-block-scopes.md"
+    rules: "knowledge_base/rules/general/avoid-single-use-boolean-temporaries.md"
+    rules: "knowledge_base/rules/general/avoid-single-use-variables-for-constant-arguments.md"
+    rules: "knowledge_base/rules/general/avoid-variable-name-index-shadowing.md"
+    rules: "knowledge_base/rules/general/break-early-from-short-circuitable-loops.md"
+    rules: "knowledge_base/rules/general/check-bitmask-flag-membership-with-nonzero.md"
+    rules: "knowledge_base/rules/general/check-null-in-deallocation-and-cleanup-functions.md"
+    rules: "knowledge_base/rules/general/clamp-sample-values-to-bit-depth.md"
+    rules: "knowledge_base/rules/general/clean-up-dead-stores-when-removing-output-metrics.md"
+    rules: "knowledge_base/rules/general/close-opened-file-streams-with-fclose.md"
+    rules: "knowledge_base/rules/general/consolidate-shared-preconditions-under-single-if.md"
+    rules: "knowledge_base/rules/general/document-behavior-in-cli-help.md"
+    rules: "knowledge_base/rules/general/encapsulate-buffer-reallocation-in-helpers.md"
+    rules: "knowledge_base/rules/general/exact-types-for-intrinsics-with-nolint.md"
+    rules: "knowledge_base/rules/general/explicitly-cast-void-pointers-to-typed-pointers.md"
+    rules: "knowledge_base/rules/general/extract-repeated-plane-calculations-to-helper.md"
+    rules: "knowledge_base/rules/general/free-allocated-struct-members-in-teardown.md"
+    rules: "knowledge_base/rules/general/general-use-void-cast-for-unused-parameters.md"
+    rules: "knowledge_base/rules/general/inclusive-bounds-for-integer-scaling-limits.md"
+    rules: "knowledge_base/rules/general/initialize-local-variables-with-default-values.md"
+    rules: "knowledge_base/rules/general/lowercase-variable-and-parameter-names.md"
+    rules: "knowledge_base/rules/general/match-clamping-direction-to-adjustment.md"
+    rules: "knowledge_base/rules/general/name-helpers-after-returned-value.md"
+    rules: "knowledge_base/rules/general/omit-redundant-float-cast-in-mixed-expressions.md"
+    rules: "knowledge_base/rules/general/omit-trailing-return-in-void-functions.md"
+    rules: "knowledge_base/rules/general/place-const-qualifier-before-type-name.md"
+    rules: "knowledge_base/rules/general/predicate-naming-for-boolean-flags-and-fields.md"
+    rules: "knowledge_base/rules/general/prefer-calloc-over-malloc-and-memset.md"
+    rules: "knowledge_base/rules/general/prefer-fixed-size-arrays-over-numbered-scalars.md"
+    rules: "knowledge_base/rules/general/prefer-scalar-temporaries-over-intermediate-array-writes.md"
+    rules: "knowledge_base/rules/general/prefer-struct-over-positional-array.md"
+    rules: "knowledge_base/rules/general/remove-dead-function-parameters.md"
+    rules: "knowledge_base/rules/general/return-expression-directly.md"
+    rules: "knowledge_base/rules/general/separate-unconditional-modes-from-threshold-computation.md"
+    rules: "knowledge_base/rules/general/specify-fixed-array-dimensions-in-parameter-declarations.md"
+    rules: "knowledge_base/rules/general/store-computed-index-and-assert-bounds.md"
+    rules: "knowledge_base/rules/general/use-coordinate-names-for-2d-loop-counters.md"
+    rules: "knowledge_base/rules/general/use-null-for-pointers-not-zero.md"
+    rules: "knowledge_base/rules/general/use-shared-clamp-helpers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?CMakeLists\\.txt"
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h|mk)"
+    rules: "knowledge_base/rules/general/arch-simd-suffix-in-filenames.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     rules: "knowledge_base/rules/general/assert-buffer-alignment-and-preconditions.md"
+    rules: "knowledge_base/rules/general/document-non-obvious-arithmetic-idioms.md"
+    rules: "knowledge_base/rules/general/prefer-bit-shift-for-power-of-two-division.md"
     rules: "knowledge_base/rules/vpx_dsp/cast-squared-sum-to-uint32-before-shift.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
-    rules: "knowledge_base/rules/general/assert-documented-invariants-and-preconditions.md"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/avoid-redundant-caller-guarded-checks-in-helpers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/avoid-redundant-dead-stores.md"
+  }
+  capability_groups {
+    content_patterns: "\\bunclear\\b"
+    rules: "knowledge_base/rules/general/avoid-speculative-questions-in-comments.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h|hpp)"
+    rules: "knowledge_base/rules/general/avoid-trivial-forwarding-wrappers.md"
+    rules: "knowledge_base/rules/general/pass-offset-buffer-pointers-from-caller.md"
+  }
+  capability_groups {
+    path_expression: "vpx/.*"
+    rules: "knowledge_base/rules/general/call-vpx-clear-system-state-at-api-exit.md"
+    rules: "knowledge_base/rules/general/omit-redundant-null-check-before-vpx-free.md"
+    rules: "knowledge_base/rules/general/validate-pointer-parameters-against-null-at-api-entry-points.md"
+    rules: "knowledge_base/rules/vpx/append-public-api-enum-entries-for-abi-compatibility.md"
+    rules: "knowledge_base/rules/vpx/document-codec-control-values-and-defaults.md"
+    rules: "knowledge_base/rules/vpx/expand-domain-abbreviations-in-public-api-documentation.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/cast-to-int64-before-multiplying.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/general/combine-adjacent-uninitialized-declarations.md"
+    rules: "knowledge_base/rules/general/declare-variables-before-statements-c89.md"
+    rules: "knowledge_base/rules/general/function-names-lowercase-snake-case.md"
+    rules: "knowledge_base/rules/general/no-redundant-void-pointer-casts.md"
+    rules: "knowledge_base/rules/general/prefer-flat-zero-initializer-for-aggregates.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h)"
+    rules: "knowledge_base/rules/general/consolidate-duplicate-constant-tables.md"
+    rules: "knowledge_base/rules/general/define-and-undef-local-feature-macros.md"
+    rules: "knowledge_base/rules/general/prefix-enum-constants-with-subsystem-or-type.md"
+    rules: "knowledge_base/rules/general/scope-internal-macros-to-source-files.md"
   }
   capability_groups {
     path_expression: "vp8/common/arm/.*"
@@ -25,11 +172,76 @@ agentic_review {
     path_expression: "vp9/common/arm/.*"
     path_expression: "vp9/common/x86/.*"
     path_expression: "vpx_dsp/.*"
+    rules: "knowledge_base/rules/general/declare-aligned-for-simd-stack-buffers.md"
     rules: "knowledge_base/rules/general/match-simd-assembly-to-c-reference-semantics.md"
+    rules: "knowledge_base/rules/general/size-buffers-for-simd-overreads-not-sanitizers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.c"
+    rules: "knowledge_base/rules/general/declare-file-local-constants-as-static-const.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/declare-file-local-functions-static.md"
+    rules: "knowledge_base/rules/general/narrow-helper-parameters-over-monolithic-context-structs.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
-    rules: "knowledge_base/rules/general/named-constants-for-block-dimensions.md"
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/general/do-not-silently-return-on-invariant-violation.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.h"
+    rules: "knowledge_base/rules/general/doxygen-prefix-macro-references-with-hash.md"
+    rules: "knowledge_base/rules/general/remove-unused-function-declarations.md"
+  }
+  capability_groups {
+    path_expression: "vpx/.*"
+    path_expression_exclusion: "vpx/src/vpx_decoder\\.c"
+    path_expression_exclusion: "vpx/src/vpx_encoder\\.c"
+    rules: "knowledge_base/rules/general/general-prefer-vpx-codec-init-macros-over-init-ver.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp8/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/arm/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/guard-wide-simd-stack-alignment-behind-arch-checks.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/initialize-new-struct-members-in-init-function.md"
+    rules: "knowledge_base/rules/general/separate-helper-logic-from-caller-state.md"
+  }
+  capability_groups {
+    rules: "knowledge_base/rules/general/isolate-code-moves-from-style-cleanups.md"
+    rules: "knowledge_base/rules/general/separate-cosmetic-refactoring-from-functional-patches.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h)"
+    path_expression: "test/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_scale/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_util/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpxdec\\.c"
+    path_expression: "vpxenc\\.c"
+    rules: "knowledge_base/rules/general/local-const-pointer-for-repeated-struct-access.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|inc|mm)"
+    rules: "knowledge_base/rules/general/no-leftover-scratch-comments.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression_exclusion: "third_party/.*"
+    rules: "knowledge_base/rules/general/pascal-case-typedef-and-tag-names.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
@@ -40,18 +252,87 @@ agentic_review {
     rules: "knowledge_base/rules/general/pass-simd-vectors-by-pointer-for-abi-alignment.md"
   }
   capability_groups {
-    path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
-    rules: "knowledge_base/rules/general/prefer-flat-zero-initializer-for-aggregates.md"
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression_exclusion: "third_party/.*"
+    rules: "knowledge_base/rules/general/prefer-else-over-separate-inverted-preprocessor-checks.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|pl)"
+    rules: "knowledge_base/rules/general/prefer-fixed-width-integer-types.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp)"
+    rules: "knowledge_base/rules/general/prefer-scoped-enums-in-cpp.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/qualify-mode-specific-function-names.md"
+    rules: "knowledge_base/rules/general/use-void-pointer-for-multi-type-buffers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_scale/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/remove-duplicate-local-extern-declarations.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_mem/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_ports/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_scale/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_util/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression_exclusion: "test/.*"
+    rules: "knowledge_base/rules/general/remove-temporary-debug-code-before-submitting.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/general/reset-dynamic-mode-flags-on-persistent-contexts.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:asm|c|cc|cpp|h|hpp)"
+    rules: "knowledge_base/rules/general/synchronize-comments-with-code-changes.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*neon[^/]*\\.\\[ch\\]"
+    path_expression: "(?:.*/)?arm/.*"
+    path_expression: "vp8/(?:.*/)?arm/.*"
+    path_expression: "vp9/(?:.*/)?arm/.*"
+    path_expression: "vpx_dsp/arm/.*"
+    rules: "knowledge_base/rules/general/use-arm-neon-vreinterpret-for-vector-casts.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression_exclusion: "third_party/.*"
+    rules: "knowledge_base/rules/general/use-inline-macro-not-bare-inline-keyword.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|h)"
-    rules: "knowledge_base/rules/general/scope-internal-macros-to-source-files.md"
+    path_expression: "(?:.*/)?[^/]*x86[^/]*/.*"
+    rules: "knowledge_base/rules/general/use-setzero-to-initialize-zero-vectors.md"
   }
   capability_groups {
     path_expression: "vpx/.*"
-    rules: "knowledge_base/rules/general/validate-pointer-parameters-against-null-at-api-entry-points.md"
-    rules: "knowledge_base/rules/vpx/append-public-api-enum-entries-for-abi-compatibility.md"
-    rules: "knowledge_base/rules/vpx/document-codec-control-values-and-defaults.md"
+    path_expression_exclusion: "third_party/.*"
+    path_expression_exclusion: "vpx/vpx_integer\\.h"
+    rules: "knowledge_base/rules/general/use-vpx-integer-header-for-standard-integers.md"
+  }
+  capability_groups {
+    path_expression: "(?:.*/)?[^/]*_iface\\.c"
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|h)"
+    path_expression: "vpx/(?:.*/)?[^/]*\\.(?:c|h)"
+    rules: "knowledge_base/rules/general/validate-codec-control-parameters.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|h)"
@@ -59,6 +340,64 @@ agentic_review {
     path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     path_expression: "vpx_dsp/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
     rules: "knowledge_base/rules/general/when-declaring-c-function-parameters-for-fixed-size-arrays-u.md"
+  }
+  capability_groups {
+    path_expression: "test/.*"
+    rules: "knowledge_base/rules/test/extract-duplicate-test-bodies-into-helpers.md"
+  }
+  capability_groups {
+    path_expression: "vp8/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp8/apply-rate-control-overflow-fixes-to-counterpart-routines.md"
+  }
+  capability_groups {
+    path_expression: "vp8/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/common/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp8/keep-encoder-decoder-specific-types-out-of-common.md"
+  }
+  capability_groups {
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    rules: "knowledge_base/rules/vp8/symmetric-cpu-used-range-check.md"
+  }
+  capability_groups {
+    path_expression: "examples/.*"
+    path_expression: "test/.*"
+    path_expression: "vp8/.*"
+    path_expression: "vp9/.*"
+    rules: "knowledge_base/rules/vp8/use-vp8-vp9-zero-macros.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp9/configure-speed-heuristics-in-speed-features.md"
+    rules: "knowledge_base/rules/vp9/differentiate-layer-depth-for-gf-vs-overlay-update.md"
+    rules: "knowledge_base/rules/vp9/support-updating-arbitrary-svc-reference-buffer-slots.md"
+    rules: "knowledge_base/rules/vp9/validate-simulcast-layer-limits.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    rules: "knowledge_base/rules/vp9/guard-external-buffer-release-callbacks.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:cc|cpp|h|hpp|mm)"
+    path_expression: "vp9/vp9_cx_iface\\.c"
+    rules: "knowledge_base/rules/vp9/guard-svc-state-with-use-svc.md"
+  }
+  capability_groups {
+    path_expression: "vp8/encoder/.*"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp9/place-rate-control-logic-in-ratectrl-module.md"
+  }
+  capability_groups {
+    path_expression: "vp9/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    path_expression: "vp9/encoder/.*"
+    rules: "knowledge_base/rules/vp9/sync-mirrored-rate-control-heuristics.md"
+  }
+  capability_groups {
+    path_expression: "vp9/encoder/(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"
+    rules: "knowledge_base/rules/vp9/sync-svc-reference-flags-and-buffer-indices.md"
   }
   capability_groups {
     path_expression: "vpx/(?:.*/)?[^/]*\\.h"
@@ -81,6 +420,7 @@ agentic_review {
     path_expression: "vp9/.*"
     path_expression: "vpx_dsp/.*"
     rules: "knowledge_base/rules/vpx_dsp/avoid-gratuitous-loop-unrolling-in-simd-dsp.md"
+    rules: "knowledge_base/rules/vpx_dsp/decompose-nested-simd-intrinsics.md"
     rules: "knowledge_base/rules/vpx_dsp/document-dsp-accumulator-dynamic-ranges.md"
     rules: "knowledge_base/rules/vpx_dsp/extract-complex-simd-sequences-into-inline-helpers.md"
     rules: "knowledge_base/rules/vpx_dsp/unroll-inner-row-loops-in-simd-dsp.md"
@@ -93,6 +433,7 @@ agentic_review {
     path_expression: "vpx_dsp/arm/.*"
     rules: "knowledge_base/rules/vpx_dsp/avoid-wider-pointer-casts-for-simd-loads.md"
     rules: "knowledge_base/rules/vpx_dsp/prefer-neon-memory-helpers-over-memcpy.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-vdup-over-vmov-in-neon.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*neon[^/]*"

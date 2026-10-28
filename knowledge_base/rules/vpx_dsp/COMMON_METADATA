@@ -19,6 +19,7 @@ agentic_review {
     path_expression: "vp9/.*"
     path_expression: "vpx_dsp/.*"
     rules: "knowledge_base/rules/vpx_dsp/avoid-gratuitous-loop-unrolling-in-simd-dsp.md"
+    rules: "knowledge_base/rules/vpx_dsp/decompose-nested-simd-intrinsics.md"
     rules: "knowledge_base/rules/vpx_dsp/document-dsp-accumulator-dynamic-ranges.md"
     rules: "knowledge_base/rules/vpx_dsp/extract-complex-simd-sequences-into-inline-helpers.md"
     rules: "knowledge_base/rules/vpx_dsp/unroll-inner-row-loops-in-simd-dsp.md"
@@ -31,6 +32,7 @@ agentic_review {
     path_expression: "vpx_dsp/arm/.*"
     rules: "knowledge_base/rules/vpx_dsp/avoid-wider-pointer-casts-for-simd-loads.md"
     rules: "knowledge_base/rules/vpx_dsp/prefer-neon-memory-helpers-over-memcpy.md"
+    rules: "knowledge_base/rules/vpx_dsp/prefer-vdup-over-vmov-in-neon.md"
   }
   capability_groups {
     path_expression: "(?:.*/)?[^/]*\\.(?:c|cc|cpp|h)"

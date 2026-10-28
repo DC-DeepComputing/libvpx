@@ -11,6 +11,7 @@ agentic_review {
     path_expression: "vpx/.*"
     rules: "knowledge_base/rules/vpx/append-public-api-enum-entries-for-abi-compatibility.md"
     rules: "knowledge_base/rules/vpx/document-codec-control-values-and-defaults.md"
+    rules: "knowledge_base/rules/vpx/expand-domain-abbreviations-in-public-api-documentation.md"
   }
   capability_groups {
     path_expression: "vpx/(?:.*/)?[^/]*\\.h"
