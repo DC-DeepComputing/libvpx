@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9e6cdbf5_714dd4f5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-29T15:56:22Z",
+      "side": 1,
+      "message": "I forgot to review the commit message yesterday. In general data types should be properly aligned, so that\u0027s reason enough to make this change.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 41
+      },
+      "revId": "360f03c2f90c1dae73044590e2ac9c34d523d4ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "85a6cdb2_1999402b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1001562
+      },
+      "writtenOn": "2026-10-29T15:56:22Z",
+      "side": 1,
+      "message": "LGTM. Thanks!",
+      "revId": "360f03c2f90c1dae73044590e2ac9c34d523d4ac",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
