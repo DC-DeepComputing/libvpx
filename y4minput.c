@@ -865,6 +865,7 @@ int y4m_input_open(y4m_input *y4m_ctx, FILE *file, char *skip_buffer,
   }
   if (!parse_tags(y4m_ctx, file)) {
     fprintf(stderr, "Error parsing %s header.\n", TAG);
+    return -1;
   }
   if (y4m_ctx->interlace == '?') {
     fprintf(stderr,

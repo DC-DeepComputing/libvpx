@@ -241,4 +241,32 @@ TEST(Y4MHeaderTest, LongHeader) {
   y4m_input_close(&y4m);
 }
 
+// y4m_input_open() must fail on a header that parse_tags() rejects.
+static void ExpectOpenFails(const char *header) {
+  libvpx_test::TempOutFile f;
+  ASSERT_NE(f.file(), nullptr);
+  fputs(header, f.file());
+  fflush(f.file());
+  ASSERT_EQ(fseek(f.file(), 0, 0), 0);
+
+  y4m_input y4m;
+  const int ret = y4m_input_open(&y4m, f.file(), /*skip_buffer=*/nullptr,
+                                 /*num_skip=*/0, /*only_420=*/0);
+  EXPECT_EQ(ret, -1) << header;
+  if (ret == 0) y4m_input_close(&y4m);
+}
+
+TEST(Y4MHeaderTest, MissingMandatoryFields) {
+  ExpectOpenFails("YUV4MPEG2 H4 F30:1 Ip C420jpeg\nFRAME\n");
+  ExpectOpenFails("YUV4MPEG2 W4 F30:1 Ip C420jpeg\nFRAME\n");
+  ExpectOpenFails("YUV4MPEG2 W4 H4 Ip C420jpeg\nFRAME\n");
+}
+
+TEST(Y4MHeaderTest, DimensionsTooLarge) {
+  // The 4:2:0 frame size of this header is 2^32 + 50 bytes, which wraps to 50
+  // in 32-bit arithmetic.
+  ExpectOpenFails("YUV4MPEG2 W46614 H61426 F30:1 Ip C420jpeg\nFRAME\n");
+  ExpectOpenFails("YUV4MPEG2 W65536 H131072 F30:1 Ip C420jpeg\nFRAME\n");
+}
+
 }  // namespace
