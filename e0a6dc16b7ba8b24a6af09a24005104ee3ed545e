@@ -1,0 +1,40 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "90c07fc5_b67d937e",
+        "filename": "test/vp9_scan_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-11-03T19:24:29Z",
+      "side": 1,
+      "message": "Nit: Since the comment notes that the decoder relies on this invariant too, consider extending the loop condition to `c \u003c\u003d num_values`. `decode_coefs()` in `vp9_detokenize.c` calls `get_coef_context(nb, token_cache, c)` after `++c` on the final coefficient (`c \u003d\u003d max_eob`), reading the trailing `(0, 0)` pair at `neighbors[MAX_NEIGHBORS * num_values + k]`.",
+      "isAi": true,
+      "revId": "e0a6dc16b7ba8b24a6af09a24005104ee3ed545e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1b0e90bc_6a118aa2",
+        "filename": "vp9/encoder/vp9_encodemb.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-11-03T19:24:29Z",
+      "side": 1,
+      "message": "Nit: Consider adding `ASSUME_VALID_SCAN_VALUE(n0);` and `ASSUME_VALID_SCAN_VALUE(n1);` before indexing `token_cache[n0]` / `token_cache[n1]`. Unlike `get_coef_context()` (which takes a decayed pointer), indexing the local `token_cache` array directly causes Clang `-fsanitize\u003darray-bounds` to emit two new bounds checks in the inner loop unless bounded by `ASSUME_VALID_SCAN_VALUE` (already verified by `CheckNeighborsPrecedeInScanOrder`).",
+      "isAi": true,
+      "revId": "e0a6dc16b7ba8b24a6af09a24005104ee3ed545e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
