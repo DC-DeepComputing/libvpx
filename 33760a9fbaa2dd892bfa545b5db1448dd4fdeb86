@@ -18,6 +18,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "e20d26b2_1c970b46",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1409109
+      },
+      "writtenOn": "2026-11-03T06:31:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9714144_062bb5b1",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "1280eca5_940ef71d",
@@ -59,6 +77,30 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d91c6168_f7639e97",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1409109
+      },
+      "writtenOn": "2026-11-03T06:31:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1280eca5_940ef71d",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 6
+      },
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d2f7c8b8_ac59acd8",
@@ -76,6 +118,24 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "98682750_cbd99084",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1409109
+      },
+      "writtenOn": "2026-11-03T06:31:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d2f7c8b8_ac59acd8",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "477b3960_7b7956fa",
@@ -89,6 +149,24 @@
       "writtenOn": "2026-11-03T05:47:10Z",
       "side": 1,
       "message": "Then this could be a range-based for loop.",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "95dec60b_c5b3f936",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1409109
+      },
+      "writtenOn": "2026-11-03T06:31:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "477b3960_7b7956fa",
       "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
