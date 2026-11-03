@@ -19,6 +19,25 @@
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "dc404653_ab68be85",
+        "filename": "test/vp9_scan_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 5298385
+      },
+      "writtenOn": "2026-11-03T19:55:34Z",
+      "side": 1,
+      "message": "Done. Extended the loop condition to `c \u003c\u003d num_values` and updated the comment to note the `c \u003d\u003d num_values` sentinel read by `decode_coefs()` and `tokenize_b()`.",
+      "parentUuid": "90c07fc5_b67d937e",
+      "isAi": true,
+      "revId": "e0a6dc16b7ba8b24a6af09a24005104ee3ed545e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "1b0e90bc_6a118aa2",
@@ -32,6 +51,25 @@
       "writtenOn": "2026-11-03T19:24:29Z",
       "side": 1,
       "message": "Nit: Consider adding `ASSUME_VALID_SCAN_VALUE(n0);` and `ASSUME_VALID_SCAN_VALUE(n1);` before indexing `token_cache[n0]` / `token_cache[n1]`. Unlike `get_coef_context()` (which takes a decayed pointer), indexing the local `token_cache` array directly causes Clang `-fsanitize\u003darray-bounds` to emit two new bounds checks in the inner loop unless bounded by `ASSUME_VALID_SCAN_VALUE` (already verified by `CheckNeighborsPrecedeInScanOrder`).",
+      "isAi": true,
+      "revId": "e0a6dc16b7ba8b24a6af09a24005104ee3ed545e",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "027f290f_31fe3cbd",
+        "filename": "vp9/encoder/vp9_encodemb.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 5298385
+      },
+      "writtenOn": "2026-11-03T19:55:34Z",
+      "side": 1,
+      "message": "Done. Added `ASSUME_VALID_SCAN_VALUE(n0)` and `ASSUME_VALID_SCAN_VALUE(n1)` (verified with `clang -O3 -DNDEBUG -fsanitize\u003darray-bounds -S` that both bounds checks are eliminated).",
+      "parentUuid": "1b0e90bc_6a118aa2",
       "isAi": true,
       "revId": "e0a6dc16b7ba8b24a6af09a24005104ee3ed545e",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
