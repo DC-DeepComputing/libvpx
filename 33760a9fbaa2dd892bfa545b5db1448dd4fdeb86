@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "b9714144_062bb5b1",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-11-03T05:47:10Z",
+      "side": 1,
+      "message": "Add a blank line between the C and C++ headers.",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "1280eca5_940ef71d",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-11-03T05:47:10Z",
+      "side": 1,
+      "message": "`static` isn\u0027t necessary in an anonymous namespace.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 6
+      },
+      "fixSuggestions": [
+        {
+          "fixId": "37114078_f185db89",
+          "description": "prompt_to_edit API",
+          "replacements": [
+            {
+              "path": "test/vp8_loopfilter_simple_test.cc",
+              "range": {
+                "startLine": 47,
+                "startChar": 0,
+                "endLine": 48,
+                "endChar": 0
+              },
+              "replacement": "void FillBuffer(ACMRandom *rnd, int stride, int mode,\n"
+            }
+          ]
+        }
+      ],
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d2f7c8b8_ac59acd8",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-11-03T05:47:10Z",
+      "side": 1,
+      "message": "Call this `kStrides` and make it an `std::array` to avoid the need for a sizeof calculation.",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "477b3960_7b7956fa",
+        "filename": "test/vp8_loopfilter_simple_test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-11-03T05:47:10Z",
+      "side": 1,
+      "message": "Then this could be a range-based for loop.",
+      "revId": "33760a9fbaa2dd892bfa545b5db1448dd4fdeb86",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
