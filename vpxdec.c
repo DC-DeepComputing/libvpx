@@ -943,8 +943,20 @@ static int main_loop(int argc, const char **argv_) {
                     render_width, render_height);
             goto fail;
           }
-          scaled_img->bit_depth = img->bit_depth;
+        } else if (scaled_img->fmt != img->fmt) {
+          // The format can change mid stream, e.g., on a bit depth change.
+          const int render_width = scaled_img->d_w;
+          const int render_height = scaled_img->d_h;
+          vpx_img_free(scaled_img);
+          scaled_img =
+              vpx_img_alloc(NULL, img->fmt, render_width, render_height, 16);
+          if (!scaled_img) {
+            fprintf(stderr, "Failed to allocate scaled image (%d x %d)\n",
+                    render_width, render_height);
+            goto fail;
+          }
         }
+        scaled_img->bit_depth = img->bit_depth;
 
         if (img->d_w != scaled_img->d_w || img->d_h != scaled_img->d_h) {
 #if CONFIG_LIBYUV
