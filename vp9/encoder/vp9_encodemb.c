@@ -16,6 +16,7 @@
 
 #include "vpx_dsp/quantize.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/compiler_attributes.h"
 #include "vpx_ports/mem.h"
 
 #if CONFIG_MISMATCH_DEBUG
@@ -103,8 +104,13 @@ static const int plane_rd_mult[REF_TYPES][PLANE_TYPES] = {
 #define RIGHT_SHIFT_POSSIBLY_NEGATIVE(num, shift) \
   (((num) >= 0) ? (num) >> (shift) : -((-(num)) >> (shift)))
 
-int vp9_optimize_b(MACROBLOCK *mb, int plane, int block, TX_SIZE tx_size,
-                   int ctx, int *rate) {
+// Kept out-of-line so ThinLTO/FDO does not inline the 1 KiB token_cache frame
+// and trellis loop into block_rd_txfm() and all switch arms of
+// vp9_encode_block_intra(), where most blocks have eob == 0 or skip trellis
+// RDO.
+static VPX_NOINLINE int optimize_b_nonzero(MACROBLOCK *mb, int plane, int block,
+                                           TX_SIZE tx_size, int ctx,
+                                           int *rate) {
   MACROBLOCKD *const xd = &mb->e_mbd;
   struct macroblock_plane *const p = &mb->plane[plane];
   struct macroblockd_plane *const pd = &xd->plane[plane];
@@ -411,6 +417,30 @@ int vp9_optimize_b(MACROBLOCK *mb, int plane, int block, TX_SIZE tx_size,
   if (rate) *rate = (count_high_values_after_eob > 0) ? -1 : (int)best_rate;
   mb->plane[plane].eobs[block] = final_eob;
   return final_eob;
+}
+
+int vp9_optimize_b(MACROBLOCK *mb, int plane, int block, TX_SIZE tx_size,
+                   int ctx, int *rate) {
+  if (mb->plane[plane].eobs[block] == 0) {
+    if (rate) {
+#if defined(__clang__) && defined(__has_feature)
+#if __has_feature(array_bounds_sanitizer)
+      if (ctx < 0 || ctx > MAX_ENERGY_CLASS) {
+        abort();
+      }
+#endif
+#endif
+      const MACROBLOCKD *const xd = &mb->e_mbd;
+      const PLANE_TYPE plane_type = get_plane_type(plane);
+      const int ref = is_inter_block(xd->mi[0]);
+      assert((!plane_type && !plane) || (plane_type && plane));
+      *rate =
+          mb->token_costs[tx_size][plane_type][ref]
+                         [get_band_translate(tx_size)[0]][0][ctx][EOB_TOKEN];
+    }
+    return 0;
+  }
+  return optimize_b_nonzero(mb, plane, block, tx_size, ctx, rate);
 }
 #undef RIGHT_SHIFT_POSSIBLY_NEGATIVE
 

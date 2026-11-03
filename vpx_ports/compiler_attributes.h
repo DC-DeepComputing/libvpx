@@ -48,6 +48,17 @@
 #endif
 
 //------------------------------------------------------------------------------
+// Function attributes.
+
+#if __has_attribute(noinline)
+#define VPX_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+#define VPX_NOINLINE __declspec(noinline)
+#else
+#define VPX_NOINLINE
+#endif  // __has_attribute(noinline)
+
+//------------------------------------------------------------------------------
 // Variable attributes.
 
 #if __has_attribute(uninitialized)
