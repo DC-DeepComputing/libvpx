@@ -1350,9 +1350,11 @@ static vpx_codec_err_t vp8e_set_scalemode(vpx_codec_alg_priv_t *ctx,
                                 scalemode.v_scaling_mode);
 
     if (!res) {
+      struct vp8_extracfg extra_cfg = ctx->vp8_cfg;
       /*force next frame a key frame to effect scaling mode */
       ctx->next_frame_flag |= FRAMEFLAGS_KEY;
-      return VPX_CODEC_OK;
+      // Resize the buffers for the new scaling mode.
+      return update_extracfg(ctx, &extra_cfg);
     } else {
       return VPX_CODEC_INVALID_PARAM;
     }

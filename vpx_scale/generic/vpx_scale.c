@@ -86,7 +86,7 @@ static void scale1d_2t1_i(const unsigned char *source, int source_step,
     temp += 10 * source[j];
     temp += 3 * source[j + source_pitch];
     temp >>= 4;
-    dest[i] = (char)(temp);
+    dest[i] = (unsigned char)(temp);
   }
 }
 
@@ -176,9 +176,9 @@ static void scale1d_c(const unsigned char *source, int source_step,
 
   assert(dest_scale != 0);
   for (i = 0; i < dest_length * dest_step; i += dest_step) {
-    dest[i] = (char)((left_modifier * left_pixel +
-                      right_modifier * right_pixel + round_value) /
-                     dest_scale);
+    dest[i] = (unsigned char)((left_modifier * left_pixel +
+                               right_modifier * right_pixel + round_value) /
+                              dest_scale);
 
     right_modifier += source_scale;
 
