@@ -1304,6 +1304,109 @@ TEST(EncodeAPI, Vp8GfOverspendBitsUnderflow) {
   vpx_img_free(img);
   ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
 }
+
+// The size of the scaled picture, as computed in vp8_change_config().
+int Vp8ScaledSize(int size, VPX_SCALING_MODE mode) {
+  static const int kNum[] = { 1, 4, 3, 1 };
+  static const int kDen[] = { 1, 5, 5, 2 };
+  return (kDen[mode] - 1 + size * kNum[mode]) / kDen[mode];
+}
+
+// Encodes a frame, which must be a key frame, and checks the size and scaling
+// mode in its header.
+void EncodeVp8KeyFrameWithScaling(vpx_codec_ctx_t *enc, const vpx_image_t *img,
+                                  int pts, VPX_SCALING_MODE h_mode,
+                                  VPX_SCALING_MODE v_mode) {
+  ASSERT_EQ(vpx_codec_encode(enc, img, pts, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+  vpx_codec_iter_t iter = nullptr;
+  const vpx_codec_cx_pkt_t *pkt;
+  int frames = 0;
+  while ((pkt = vpx_codec_get_cx_data(enc, &iter)) != nullptr) {
+    if (pkt->kind != VPX_CODEC_CX_FRAME_PKT) continue;
+    ++frames;
+    const uint8_t *const buf =
+        static_cast<const uint8_t *>(pkt->data.frame.buf);
+    ASSERT_GE(pkt->data.frame.sz, 10u);
+    ASSERT_EQ(buf[0] & 1, 0) << "not a key frame";
+    const int width = buf[6] | ((buf[7] & 0x3f) << 8);
+    const int height = buf[8] | ((buf[9] & 0x3f) << 8);
+    EXPECT_EQ(width, Vp8ScaledSize(img->d_w, h_mode));
+    EXPECT_EQ(height, Vp8ScaledSize(img->d_h, v_mode));
+    EXPECT_EQ(buf[7] >> 6, static_cast<int>(h_mode));
+    EXPECT_EQ(buf[9] >> 6, static_cast<int>(v_mode));
+  }
+  EXPECT_EQ(frames, 1);
+}
+
+// A scaling mode that makes the picture larger in one dimension than the
+// previous one must not write past the buffer of the scaled source, which is
+// allocated when the configuration is applied.
+TEST(EncodeAPI, Vp8SetScaleModeAfterReconfig) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp8_cx();
+  vpx_codec_ctx_t enc;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 116;
+  cfg.g_h = 200;
+  cfg.g_lag_in_frames = 0;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(img, nullptr);
+
+  int pts = 0;
+  vpx_scaling_mode_t mode = { VP8E_NORMAL, VP8E_ONETWO };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  EncodeVp8KeyFrameWithScaling(&enc, img, pts++, mode.h_scaling_mode,
+                               mode.v_scaling_mode);
+
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_CPUUSED, 4), VPX_CODEC_OK);
+  mode = { VP8E_ONETWO, VP8E_NORMAL };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  EncodeVp8KeyFrameWithScaling(&enc, img, pts++, mode.h_scaling_mode,
+                               mode.v_scaling_mode);
+
+  cfg.rc_target_bitrate += 50;
+  ASSERT_EQ(vpx_codec_enc_config_set(&enc, &cfg), VPX_CODEC_OK);
+  mode = { VP8E_THREEFIVE, VP8E_FOURFIVE };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  EncodeVp8KeyFrameWithScaling(&enc, img, pts++, mode.h_scaling_mode,
+                               mode.v_scaling_mode);
+
+  mode = { VP8E_NORMAL, VP8E_NORMAL };
+  ASSERT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode), VPX_CODEC_OK);
+  EncodeVp8KeyFrameWithScaling(&enc, img, pts++, mode.h_scaling_mode,
+                               mode.v_scaling_mode);
+
+  vpx_img_free(img);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
+
+// An invalid mode must not change the scaling mode.
+TEST(EncodeAPI, Vp8SetScaleModeInvalid) {
+  vpx_codec_iface_t *const iface = vpx_codec_vp8_cx();
+  vpx_codec_ctx_t enc;
+  vpx_codec_enc_cfg_t cfg;
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 116;
+  cfg.g_h = 200;
+  cfg.g_lag_in_frames = 0;
+  ASSERT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0), VPX_CODEC_OK);
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(img, nullptr);
+
+  vpx_scaling_mode_t mode = { VP8E_ONETWO, static_cast<VPX_SCALING_MODE>(4) };
+  EXPECT_EQ(vpx_codec_control(&enc, VP8E_SET_SCALEMODE, &mode),
+            VPX_CODEC_INVALID_PARAM);
+  EncodeVp8KeyFrameWithScaling(&enc, img, 0, VP8E_NORMAL, VP8E_NORMAL);
+
+  vpx_img_free(img);
+  ASSERT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+}
 #endif  // CONFIG_VP8_ENCODER
 
 #if CONFIG_VP9_ENCODER
