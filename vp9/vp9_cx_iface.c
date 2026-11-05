@@ -299,6 +299,7 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
   RANGE_CHECK(extra_cfg, arnr_max_frames, 0, 15);
   RANGE_CHECK_HI(extra_cfg, arnr_strength, 6);
   RANGE_CHECK(extra_cfg, cq_level, 0, 63);
+  RANGE_CHECK_HI(extra_cfg, gf_cbr_boost_pct, 1000);
   RANGE_CHECK(cfg, g_bit_depth, VPX_BITS_8, VPX_BITS_12);
   RANGE_CHECK(cfg, g_input_bit_depth, 8, 12);
   if (cfg->g_input_bit_depth > (unsigned int)cfg->g_bit_depth)
