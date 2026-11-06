@@ -690,6 +690,7 @@ static vpx_codec_err_t vp8e_mr_alloc_mem(const vpx_codec_enc_cfg_t *cfg,
     free(shared_mem_loc);
     res = VPX_CODEC_MEM_ERROR;
   } else {
+    shared_mem_loc->mb_info_count = mb_rows * mb_cols;
     *mem_loc = (void *)shared_mem_loc;
     res = VPX_CODEC_OK;
   }
@@ -761,6 +762,20 @@ static vpx_codec_err_t vp8e_init(vpx_codec_ctx_t *ctx,
     vp8_initialize_enc();
 
     res = validate_config(priv, &priv->cfg, &priv->vp8_cfg, 0);
+
+#if CONFIG_MULTI_RES_ENCODING
+    // The macroblock info shared by the encoders is sized for the first one.
+    if (!res && mr_cfg) {
+      const LOWER_RES_FRAME_INFO *const info =
+          (const LOWER_RES_FRAME_INFO *)mr_cfg->mr_low_res_mode_info;
+      const int mbs = ((priv->cfg.g_w + 15) >> 4) * ((priv->cfg.g_h + 15) >> 4);
+      if (mbs > info->mb_info_count) {
+        priv->base.err_detail =
+            "g_w x g_h has more macroblocks than the first encoder";
+        res = VPX_CODEC_INVALID_PARAM;
+      }
+    }
+#endif
 
     if (!res) {
       priv->pts_offset_initialized = 0;

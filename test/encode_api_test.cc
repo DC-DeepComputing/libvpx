@@ -1474,6 +1474,49 @@ TEST(EncodeAPI, MultiResEncodeFirstIterFailOOB) {
   for (int i = 0; i < kNumEnc; ++i) vpx_img_free(&imgs[i]);
   for (int i = kNumEnc - 1; i >= 0; --i) vpx_codec_destroy(&enc[i]);
 }
+
+// The macroblock info that the encoders share is allocated for the first
+// configuration, so an encoder with more macroblocks than the first one would
+// write past it.
+TEST(EncodeAPI, MultiResInitLargerThanFirst) {
+  constexpr int kNumEnc = 3;
+  static const struct {
+    int w[kNumEnc];
+    int h[kNumEnc];
+    vpx_codec_err_t res;
+  } kTests[] = {
+    { { 80, 160, 320 }, { 60, 120, 240 }, VPX_CODEC_INVALID_PARAM },
+    { { 320, 160, 320 }, { 240, 120, 240 }, VPX_CODEC_OK },
+    { { 320, 160, 321 }, { 240, 120, 240 }, VPX_CODEC_INVALID_PARAM },
+    { { 320, 160, 80 }, { 240, 120, 60 }, VPX_CODEC_OK },
+  };
+  vpx_rational_t dsf[kNumEnc] = { { 2, 1 }, { 2, 1 }, { 1, 1 } };
+  for (const auto &test : kTests) {
+    SCOPED_TRACE(::testing::Message()
+                 << test.w[0] << "x" << test.h[0] << " " << test.w[1] << "x"
+                 << test.h[1] << " " << test.w[2] << "x" << test.h[2]);
+    vpx_codec_ctx_t enc[kNumEnc] = {};
+    vpx_codec_enc_cfg_t cfg[kNumEnc];
+    for (int i = 0; i < kNumEnc; ++i) {
+      ASSERT_EQ(
+          vpx_codec_enc_config_default(&vpx_codec_vp8_cx_algo, &cfg[i], 0),
+          VPX_CODEC_OK);
+      cfg[i].g_w = test.w[i];
+      cfg[i].g_h = test.h[i];
+      cfg[i].g_lag_in_frames = 0;
+      cfg[i].rc_end_usage = VPX_CBR;
+      cfg[i].rc_target_bitrate = 300 >> i;
+    }
+    ASSERT_EQ(vpx_codec_enc_init_multi(enc, &vpx_codec_vp8_cx_algo, cfg,
+                                       kNumEnc, 0, dsf),
+              test.res);
+    if (test.res == VPX_CODEC_OK) {
+      for (int i = kNumEnc - 1; i >= 0; --i) {
+        EXPECT_EQ(vpx_codec_destroy(&enc[i]), VPX_CODEC_OK);
+      }
+    }
+  }
+}
 #endif  // CONFIG_VP8_ENCODER && CONFIG_MULTI_RES_ENCODING
 
 TEST(EncodeAPI, SetRoi) {

@@ -187,6 +187,8 @@ typedef struct {
   unsigned int skip_encoding_prev_stream;
   unsigned int skip_encoding_base_stream;
   LOWER_RES_MB_INFO *mb_info;
+  // The number of elements allocated for mb_info.
+  int mb_info_count;
 } LOWER_RES_FRAME_INFO;
 #endif
 
