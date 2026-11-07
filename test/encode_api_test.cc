@@ -3723,6 +3723,55 @@ TEST(EncodeAPI, SvcIssue505665613) {
   vpx_codec_destroy(&codec);
 }
 
+// speed_per_layer is used as a shift count in the variance partition
+// thresholds, so a value outside the range of VP8E_SET_CPUUSED is invalid.
+TEST(EncodeAPI, Vp9SvcSpeedPerLayerRange) {
+  vpx_codec_ctx_t codec;
+  vpx_codec_enc_cfg_t cfg;
+  vpx_codec_iface_t *iface = vpx_codec_vp9_cx();
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  cfg.g_w = 320;
+  cfg.g_h = 240;
+  cfg.g_lag_in_frames = 0;
+  cfg.rc_end_usage = VPX_CBR;
+  cfg.ss_number_layers = 2;
+  cfg.ts_number_layers = 1;
+  cfg.rc_target_bitrate = 600;
+  cfg.layer_target_bitrate[0] = 200;
+  cfg.layer_target_bitrate[1] = 600;
+  ASSERT_EQ(vpx_codec_enc_init(&codec, iface, &cfg, 0), VPX_CODEC_OK);
+  ASSERT_EQ(vpx_codec_control(&codec, VP9E_SET_SVC, 1), VPX_CODEC_OK);
+
+  vpx_svc_extra_cfg_t svc = {};
+  for (int i = 0; i < 2; ++i) {
+    svc.max_quantizers[i] = 56;
+    svc.min_quantizers[i] = 2;
+    svc.scaling_factor_num[i] = 1;
+    svc.scaling_factor_den[i] = 2 - i;
+  }
+  for (const int speed : { -100, -1, 10, 100000, INT_MAX }) {
+    SCOPED_TRACE(speed);
+    svc.speed_per_layer[0] = 7;
+    svc.speed_per_layer[1] = speed;
+    EXPECT_EQ(vpx_codec_control(&codec, VP9E_SET_SVC_PARAMETERS, &svc),
+              VPX_CODEC_INVALID_PARAM);
+  }
+  for (const int speed : { 0, 5, 9 }) {
+    SCOPED_TRACE(speed);
+    svc.speed_per_layer[0] = svc.speed_per_layer[1] = speed;
+    EXPECT_EQ(vpx_codec_control(&codec, VP9E_SET_SVC_PARAMETERS, &svc),
+              VPX_CODEC_OK);
+  }
+
+  vpx_image_t *const img =
+      CreateImage(VPX_BITS_8, VPX_IMG_FMT_I420, cfg.g_w, cfg.g_h);
+  ASSERT_NE(img, nullptr);
+  ASSERT_EQ(vpx_codec_encode(&codec, img, 0, 1, 0, VPX_DL_REALTIME),
+            VPX_CODEC_OK);
+  vpx_img_free(img);
+  EXPECT_EQ(vpx_codec_destroy(&codec), VPX_CODEC_OK);
+}
+
 TEST(EncodeAPI, Vp9TargetLevelTinyResolution) {
   vpx_codec_enc_cfg_t cfg;
   vpx_codec_iface_t *const iface = vpx_codec_vp9_cx();

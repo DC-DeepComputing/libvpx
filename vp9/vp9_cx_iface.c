@@ -1977,6 +1977,10 @@ static vpx_codec_err_t ctrl_set_svc_parameters(vpx_codec_alg_priv_t *ctx,
           (params->scaling_factor_num[sl] > params->scaling_factor_den[sl])) {
         return VPX_CODEC_INVALID_PARAM;
       }
+      // Checks on valid speed, the range of abs(cpu_used).
+      if (params->speed_per_layer[sl] < 0 || params->speed_per_layer[sl] > 9) {
+        return VPX_CODEC_INVALID_PARAM;
+      }
       lc->scaling_factor_num = params->scaling_factor_num[sl];
       lc->scaling_factor_den = params->scaling_factor_den[sl];
       lc->speed = params->speed_per_layer[sl];
