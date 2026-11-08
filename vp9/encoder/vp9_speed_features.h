@@ -344,6 +344,10 @@ typedef struct SPEED_FEATURES {
   // for intra and model coefs for the rest.
   TX_SIZE_SEARCH_METHOD tx_size_search_method;
 
+  // Cache the outcome of the RD evaluation of transform blocks within each
+  // superblock row, to skip evaluating them again (see block_rd_txfm()).
+  int use_tx_rd_cache;
+
   // How many levels of tx size to search, starting from the largest.
   int tx_size_search_depth;
 
