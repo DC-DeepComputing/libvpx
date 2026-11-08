@@ -1057,6 +1057,8 @@ static void dealloc_compressor_data(VP9_COMP *cpi) {
   cpi->tplist[0][0] = NULL;
 
   vp9_free_pc_tree(&cpi->td);
+  vpx_free(cpi->td.tx_rd_cache);
+  cpi->td.tx_rd_cache = NULL;
 
   for (i = 0; i < MAX_LAG_BUFFERS; ++i) {
     vpx_free_frame_buffer(&cpi->svc.scaled_frames[i]);

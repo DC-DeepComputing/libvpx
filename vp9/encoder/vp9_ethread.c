@@ -15,6 +15,7 @@
 #include "vp9/encoder/vp9_ethread.h"
 #include "vp9/encoder/vp9_firstpass.h"
 #include "vp9/encoder/vp9_multi_thread.h"
+#include "vp9/encoder/vp9_rdopt.h"
 #include "vp9/encoder/vp9_temporal_filter.h"
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_util/vpx_pthread.h"
@@ -185,6 +186,7 @@ void vp9_encode_free_mt_data(struct VP9_COMP *cpi) {
     if (t < cpi->num_workers - 1) {
       vpx_free(thread_data->td->counts);
       vp9_free_pc_tree(thread_data->td);
+      vpx_free(thread_data->td->tx_rd_cache);
       vpx_free(thread_data->td);
     }
   }
@@ -212,6 +214,7 @@ void vp9_encode_tiles_mt(VP9_COMP *cpi) {
     if (thread_data->td != &cpi->td) {
       thread_data->td->mb = cpi->td.mb;
       thread_data->td->rd_counts = cpi->td.rd_counts;
+      vp9_alloc_tx_rd_cache(cpi, thread_data->td);
     }
     if (thread_data->td->counts != &cpi->common.counts) {
       memcpy(thread_data->td->counts, &cpi->common.counts,
@@ -653,6 +656,7 @@ void vp9_encode_tiles_row_mt(VP9_COMP *cpi) {
     if (thread_data->td != &cpi->td) {
       thread_data->td->mb = cpi->td.mb;
       thread_data->td->rd_counts = cpi->td.rd_counts;
+      vp9_alloc_tx_rd_cache(cpi, thread_data->td);
     }
     if (thread_data->td->counts != &cpi->common.counts) {
       memcpy(thread_data->td->counts, &cpi->common.counts,
