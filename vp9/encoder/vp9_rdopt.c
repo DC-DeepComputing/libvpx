@@ -80,6 +80,8 @@ struct rdcost_block_args {
   const ScanOrder *so;
   uint8_t skippable;
   struct buf_2d *this_recon;
+  VP9TxRdCache *tx_rd_cache;  // NULL if the cache is not used.
+  uint64_t tx_rd_seed;
 };
 
 #define LAST_NEW_MV_INDEX 6
@@ -690,6 +692,63 @@ static void dist_block(const VP9_COMP *cpi, MACROBLOCK *x, int plane,
   }
 }
 
+// The RD search evaluates many transform blocks again with the same inputs:
+// nested partitions and repeated candidates (shared motion vectors, intra modes
+// with unchanged neighbors) predict the same pixels at the same position, which
+// with the parameters in tx_rd_seed determine the outcome of block_rd_txfm().
+static INLINE uint64_t tx_rd_round(uint64_t h, uint64_t v) {
+  h += v * 0xC2B2AE3D27D4EB4FULL;
+  return ((h << 31) | (h >> 33)) * 0x9E3779B185EBCA87ULL;
+}
+
+// Looks up the transform block at (blk_row, blk_col) predicted at dst: a hit
+// needs the same key and a bit-identical prediction. On a miss, c->e is the
+// entry to fill in, and the prediction is kept at c->pos - w * w.
+static INLINE int tx_rd_probe(VP9TxRdCache *c,
+                              const struct rdcost_block_args *args, int plane,
+                              int blk_row, int blk_col, TX_SIZE tx_size,
+                              int extra, const uint8_t *dst, int stride) {
+  const MACROBLOCKD *const xd = &args->x->e_mbd;
+  const uint64_t row =
+      (-xd->mb_to_top_edge >> (5 + xd->plane[plane].subsampling_y)) + blk_row;
+  const uint64_t col =
+      (-xd->mb_to_left_edge >> (5 + xd->plane[plane].subsampling_x)) + blk_col;
+  const int w = 4 << tx_size;
+  uint32_t a, b;  // Corners of the prediction, to spread it over the cache.
+  memcpy(&a, dst, 4);
+  memcpy(&b, dst + (w - 1) * stride + w - 4, 4);
+  c->key =
+      tx_rd_round(tx_rd_round(args->tx_rd_seed, row << 40 | col << 16 | extra),
+                  a | (uint64_t)b << 32);
+  c->e = &c->entry[c->key >> 51];
+  c->hit = c->e->key == c->key && c->pos - c->e->pos <= TX_RD_RING &&
+           !args->cpi->fn_ptr[txsize_to_bsize[tx_size]].sdf(
+               dst, stride, &c->buf[c->e->pos % TX_RD_RING], w);
+  if (!c->hit) {
+    vpx_convolve_copy(dst, stride, &c->buf[c->pos % TX_RD_RING], w, NULL, 0, 0,
+                      0, 0, w, w);
+    c->pos += w * w;
+  }
+  return c->hit;
+}
+
+int vp9_tx_rd_cache_intra(MACROBLOCK *x, struct encode_b_args *args, int plane,
+                          int row, int col, TX_SIZE tx_size, int tx_type,
+                          uint8_t *dst, int dst_stride) {
+  VP9TxRdCache *const c = x->tx_rd_args->tx_rd_cache;
+  const int ctx = combine_entropy_contexts(args->ta[col], args->tl[row]);
+  const int w = 4 << tx_size;
+  if (!tx_rd_probe(c, x->tx_rd_args, plane, row, col, tx_size,
+                   ctx | tx_type << 2, dst, dst_stride))
+    return 0;
+  if (c->e->eob) {
+    vpx_convolve_copy(&c->buf[c->e->pos % TX_RD_RING + w * w], w, dst,
+                      dst_stride, NULL, 0, 0, 0, 0, w, w);
+    *args->skip = 0;
+  }
+  return 1;
+}
+
 static int rate_block(int plane, int block, TX_SIZE tx_size, int coeff_ctx,
                       struct rdcost_block_args *args) {
   return cost_coeffs(args->x, plane, block, tx_size, coeff_ctx, args->so->scan,
@@ -717,6 +776,8 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
   const int enable_trellis_opt = args->cpi->sf.trellis_opt_tx_rd.method;
   const double trellis_opt_thresh = args->cpi->sf.trellis_opt_tx_rd.thresh;
   int sse_calc_done = 0;
+  VP9TxRdCache *const c = args->tx_rd_cache;
+  int hit = 0;
 #if CONFIG_MISMATCH_DEBUG
   struct encode_b_args encode_b_arg = {
     x,
@@ -745,16 +806,22 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
 #endif
 
   if (args->exit_early) return;
+  if (c != NULL) c->e = NULL;
 
   if (!is_inter_block(mi)) {
     vp9_encode_block_intra(plane, block, blk_row, blk_col, plane_bsize, tx_size,
                            &encode_b_arg);
+    hit = c != NULL && c->e != NULL && c->hit;
     if (recon) {
       uint8_t *rec_ptr = &recon->buf[4 * (blk_row * recon->stride + blk_col)];
       copy_block_visible(xd, pd, dst, dst_stride, rec_ptr, recon->stride,
                          blk_row, blk_col, plane_bsize, tx_bsize);
     }
-    if (x->block_tx_domain) {
+    if (hit) {
+      x->plane[plane].eobs[block] = c->e->eob;
+      dist = c->e->dist;
+      sse = c->e->sse;
+    } else if (x->block_tx_domain) {
       dist_block(args->cpi, x, plane, plane_bsize, block, blk_row, blk_col,
                  tx_size, &dist, &sse, /*out_recon=*/NULL, sse_calc_done);
     } else {
@@ -792,8 +859,15 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
       skip_txfm_flag = SKIP_TXFM_NONE;
     }
 
-    if (skip_txfm_flag == SKIP_TXFM_NONE ||
-        (recon && skip_txfm_flag == SKIP_TXFM_AC_ONLY)) {
+    hit = c != NULL && skip_txfm_flag == SKIP_TXFM_NONE &&
+          tx_rd_probe(c, args, plane, blk_row, blk_col, tx_size, coeff_ctx, dst,
+                      dst_stride);
+    if (hit) {
+      x->plane[plane].eobs[block] = c->e->eob;
+      dist = c->e->dist;
+      sse = c->e->sse;
+    } else if (skip_txfm_flag == SKIP_TXFM_NONE ||
+               (recon && skip_txfm_flag == SKIP_TXFM_AC_ONLY)) {
       const struct macroblock_plane *const p = &x->plane[plane];
       const int diff_stride = 4 * num_4x4_blocks_wide_lookup[plane_bsize];
       const int16_t *const diff =
@@ -842,9 +916,22 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
     assert(trellis_rate == rate_block(plane, block, tx_size, coeff_ctx, args));
   }
 #endif
-  rate = (trellis_rate >= 0 && !args->use_fast_coef_costing)
+  rate = hit ? c->e->rate
+         : (trellis_rate >= 0 && !args->use_fast_coef_costing)
              ? trellis_rate
              : rate_block(plane, block, tx_size, coeff_ctx, args);
+  if (c != NULL && c->e != NULL && !hit) {
+    const int w = 4 << tx_size;
+    const TX_RD_ENTRY e = {
+      c->key, c->pos - w * w, dist, sse, rate, x->plane[plane].eobs[block]
+    };
+    *c->e = e;
+    if (!is_inter_block(mi) && e.eob) {
+      vpx_convolve_copy(dst, dst_stride, &c->buf[e.pos % TX_RD_RING + w * w], w,
+                        NULL, 0, 0, 0, 0, w, w);
+      c->pos += w * w;
+    }
+  }
   args->t_above[blk_col] = (x->plane[plane].eobs[block] > 0) ? 1 : 0;
   args->t_left[blk_row] = (x->plane[plane].eobs[block] > 0) ? 1 : 0;
   rd1 = RDCOST(x->rdmult, x->rddiv, rate, dist);
@@ -893,9 +980,28 @@ static void txfm_rd_in_plane(const VP9_COMP *cpi, MACROBLOCK *x, int *rate,
   vp9_get_entropy_contexts(bsize, tx_size, pd, args.t_above, args.t_left);
 
   args.so = get_scan(xd, tx_size, get_plane_type(plane), 0);
+  // The cache needs the coefficients of the search to be dead afterwards (see
+  // swap_block_ptr()) and an up-to-date residual (see super_block_uvrd()).
+  if (x->tx_rd_cache && cpi->sf.tx_size_search_method == USE_FULL_RD &&
+      !recon && ref_best_rd >= 0 &&
+      !(xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH)) {
+    args.tx_rd_cache = x->tx_rd_cache;
+    if (!is_inter_block(xd->mi[0])) x->tx_rd_args = &args;
+    args.tx_rd_seed = tx_rd_round(
+        (uint64_t)(uint32_t)x->rdmult << 32 | (uint32_t)pd->dequant[0] << 16 |
+            (uint16_t)pd->dequant[1],
+        x->tx_rd_cache->epoch << 16 | plane | tx_size << 2 |
+            is_inter_block(xd->mi[0]) << 4 | x->block_tx_domain << 5 |
+            x->skip_encode << 6 | xd->mi[0]->segment_id << 7 |
+            (cpi->sf.trellis_opt_tx_rd.method ==
+                 ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR &&
+             x->log_block_src_var <= cpi->sf.trellis_opt_tx_rd.thresh)
+                << 10);
+  }
 
   vp9_foreach_transformed_block_in_plane(xd, bsize, plane, block_rd_txfm,
                                          &args);
+  x->tx_rd_args = NULL;
   if (args.exit_early) {
     *rate = INT_MAX;
     *distortion = INT64_MAX;

@@ -5473,6 +5473,8 @@ void vp9_encode_sb_row(VP9_COMP *cpi, ThreadData *td, int tile_row,
 
   tile_sb_row = mi_cols_aligned_to_sb(mi_row - tile_info->mi_row_start) >>
                 MI_BLOCK_SIZE_LOG2;
+  td->mb.tx_rd_cache = &td->tx_rd_cache;  // td->mb may be a copy of cpi->td.mb
+  ++td->tx_rd_cache.epoch;                // Entries are kept for one SB row.
   get_start_tok(cpi, tile_row, tile_col, mi_row, &tok);
   cpi->tplist[tile_row][tile_col][tile_sb_row].start = tok;
 
