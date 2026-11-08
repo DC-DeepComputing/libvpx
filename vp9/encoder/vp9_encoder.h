@@ -383,6 +383,20 @@ typedef struct RD_COUNTS {
   int64_t filter_diff[SWITCHABLE_FILTER_CONTEXTS];
 } RD_COUNTS;
 
+// The transform block RD cache (see block_rd_txfm()), sized to stay in L2.
+#define TX_RD_RING (1 << 19)
+typedef struct {
+  uint64_t key, pos;  // pos: of the prediction and intra recon in buf
+  int64_t dist, sse;
+  int rate, eob;
+} TX_RD_ENTRY;
+typedef struct VP9TxRdCache {
+  TX_RD_ENTRY entry[1 << 13], *e;  // e: the entry of the block in evaluation.
+  uint64_t key, epoch, pos;        // pos: bytes written to buf so far.
+  DECLARE_ALIGNED(16, uint8_t, buf[TX_RD_RING + 2048]);  // Ring, and slack.
+  int hit;
+} VP9TxRdCache;
+
 typedef struct ThreadData {
   MACROBLOCK mb;
   RD_COUNTS rd_counts;
@@ -391,6 +405,7 @@ typedef struct ThreadData {
   PICK_MODE_CONTEXT *leaf_tree;
   PC_TREE *pc_tree;
   PC_TREE *pc_root;
+  VP9TxRdCache tx_rd_cache;
 } ThreadData;
 
 struct EncWorkerData;

@@ -30,6 +30,7 @@
 #include "vp9/encoder/vp9_encodemb.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_rd.h"
+#include "vp9/encoder/vp9_rdopt.h"
 #include "vp9/encoder/vp9_tokenize.h"
 
 #if defined(NDEBUG)
@@ -936,6 +937,10 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
 
   if (!x->skip_recode) {
     const int tx_size_in_pixels = (1 << tx_size) << 2;
+    if (x->tx_rd_args &&
+        vp9_tx_rd_cache_intra(x, args, plane, row, col, tx_size, tx_type, dst,
+                              dst_stride))
+      return;
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       vpx_highbd_subtract_block(tx_size_in_pixels, tx_size_in_pixels, src_diff,
