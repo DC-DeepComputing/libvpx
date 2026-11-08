@@ -16,6 +16,7 @@
 
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/compiler_attributes.h"
 #include "vpx_ports/mem.h"
 #include "vpx_ports/system_state.h"
 
@@ -696,7 +697,9 @@ static void dist_block(const VP9_COMP *cpi, MACROBLOCK *x, int plane,
 // nested partitions and repeated candidates (shared motion vectors, intra modes
 // with unchanged neighbors) predict the same pixels at the same position, which
 // with the parameters in tx_rd_seed determine the outcome of block_rd_txfm().
-static INLINE uint64_t tx_rd_round(uint64_t h, uint64_t v) {
+// This is a hash round: the unsigned wraparound of its arithmetic is intended.
+static VPX_NO_UNSIGNED_OVERFLOW_CHECK VPX_NO_UNSIGNED_SHIFT_CHECK uint64_t
+tx_rd_round(uint64_t h, uint64_t v) {
   h += v * 0xC2B2AE3D27D4EB4FULL;
   return ((h << 31) | (h >> 33)) * 0x9E3779B185EBCA87ULL;
 }
