@@ -208,6 +208,8 @@ struct macroblock {
   DECLARE_ALIGNED(16, uint8_t, est_pred[64 * 64]);
 
   struct scale_factors *me_sf;
+  struct VP9TxRdCache *tx_rd_cache;      // See block_rd_txfm().
+  struct rdcost_block_args *tx_rd_args;  // While intra blocks may use it.
 };
 
 #ifdef __cplusplus

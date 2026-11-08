@@ -24,6 +24,7 @@ struct TileInfo;
 struct VP9_COMP;
 struct macroblock;
 struct RD_COST;
+struct encode_b_args;
 
 void vp9_rd_pick_intra_mode_sb(struct VP9_COMP *cpi, struct macroblock *x,
                                struct RD_COST *rd_cost, BLOCK_SIZE bsize,
@@ -46,6 +47,10 @@ int vp9_internal_image_edge(struct VP9_COMP *cpi);
 int vp9_active_h_edge(struct VP9_COMP *cpi, int mi_row, int mi_step);
 int vp9_active_v_edge(struct VP9_COMP *cpi, int mi_col, int mi_step);
 int vp9_active_edge_sb(struct VP9_COMP *cpi, int mi_row, int mi_col);
+// Replays the intra transform block predicted at dst if cached; returns 1 then.
+int vp9_tx_rd_cache_intra(struct macroblock *x, struct encode_b_args *args,
+                          int plane, int row, int col, TX_SIZE tx_size,
+                          int tx_type, uint8_t *dst, int dst_stride);
 
 #if !CONFIG_REALTIME_ONLY
 void vp9_rd_pick_inter_mode_sub8x8(struct VP9_COMP *cpi,
