@@ -18,6 +18,8 @@
 extern "C" {
 #endif
 
+struct rdcost_block_args;
+
 struct encode_b_args {
   MACROBLOCK *x;
   int enable_trellis_opt;
@@ -32,6 +34,9 @@ struct encode_b_args {
   // coefficient costing, or -1 when the rate is unavailable. May be NULL if the
   // caller does not need the rate. See vp9_optimize_b().
   int *rate;
+  // If non-NULL, points to the rdcost_block_args of block_rd_txfm() when the
+  // transform block RD cache is active.
+  struct rdcost_block_args *tx_rd_args;
 #if CONFIG_MISMATCH_DEBUG
   int mi_row;
   int mi_col;
