@@ -391,6 +391,8 @@ typedef struct ThreadData {
   PICK_MODE_CONTEXT *leaf_tree;
   PC_TREE *pc_tree;
   PC_TREE *pc_root;
+  // See vp9_alloc_tx_rd_cache(). Allocated for the first frame that uses it.
+  struct TX_RD_CACHE *tx_rd_cache;
 } ThreadData;
 
 struct EncWorkerData;
@@ -1315,6 +1317,13 @@ static int64_t sum_squares_visible(const MACROBLOCKD *xd,
   return sse;
 }
 
+// Returns whether ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR optimizes the coefficients
+// of the transform blocks of x.
+static INLINE int trellis_opt_src_var(const MACROBLOCK *x, double thresh) {
+  vpx_clear_system_state();
+  return thresh > 0.0 ? x->log_block_src_var <= thresh : 1;
+}
+
 // Check if trellis coefficient optimization of the transform block is enabled.
 static INLINE int do_trellis_opt(const struct macroblockd_plane *pd,
                                  const int16_t *src_diff, int diff_stride,
@@ -1327,13 +1336,8 @@ static INLINE int do_trellis_opt(const struct macroblockd_plane *pd,
   switch (args->enable_trellis_opt) {
     case DISABLE_TRELLIS_OPT: return 0;
     case ENABLE_TRELLIS_OPT: return 1;
-    case ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR: {
-      vpx_clear_system_state();
-
-      return (args->trellis_opt_thresh > 0.0)
-                 ? (x->log_block_src_var <= args->trellis_opt_thresh)
-                 : 1;
-    }
+    case ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR:
+      return trellis_opt_src_var(x, args->trellis_opt_thresh);
     case ENABLE_TRELLIS_OPT_TX_RD_RESIDUAL_MSE: {
       const MACROBLOCKD *const xd = &x->e_mbd;
       const BLOCK_SIZE tx_bsize = txsize_to_bsize[tx_size];

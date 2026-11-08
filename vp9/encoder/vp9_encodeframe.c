@@ -5473,6 +5473,7 @@ void vp9_encode_sb_row(VP9_COMP *cpi, ThreadData *td, int tile_row,
 
   tile_sb_row = mi_cols_aligned_to_sb(mi_row - tile_info->mi_row_start) >>
                 MI_BLOCK_SIZE_LOG2;
+  vp9_reset_tx_rd_cache(cpi, td);
   get_start_tok(cpi, tile_row, tile_col, mi_row, &tok);
   cpi->tplist[tile_row][tile_col][tile_sb_row].start = tok;
 
@@ -5728,6 +5729,8 @@ static void encode_frame_internal(VP9_COMP *cpi) {
 
   // Frame segmentation
   if (cpi->oxcf.aq_mode == PERCEPTUAL_AQ) build_kmeans_segmentation(cpi);
+
+  vp9_alloc_tx_rd_cache(cpi, td);
 
   {
 #if CONFIG_INTERNAL_STATS

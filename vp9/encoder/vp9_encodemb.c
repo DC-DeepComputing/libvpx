@@ -882,10 +882,12 @@ void vp9_encode_sb(MACROBLOCK *x, BLOCK_SIZE bsize, int mi_row, int mi_col,
   }
 }
 
-void vp9_encode_block_intra(int plane, int block, int row, int col,
-                            BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
-                            void *arg) {
-  struct encode_b_args *const args = arg;
+// With constant predict and code_residual, compiles to each of the steps of
+// vp9_encode_block_intra(), or to all of them. Returns the transform type.
+static VPX_FORCE_INLINE TX_TYPE
+encode_block_intra(int plane, int block, int row, int col,
+                   BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                   struct encode_b_args *args, int predict, int code_residual) {
   MACROBLOCK *const x = args->x;
   MACROBLOCKD *const xd = &x->e_mbd;
   MODE_INFO *mi = xd->mi[0];
@@ -926,10 +928,13 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
     }
   }
 
-  vp9_predict_intra_block(
-      xd, bwl, tx_size, mode, (x->skip_encode || x->fp_src_pred) ? src : dst,
-      (x->skip_encode || x->fp_src_pred) ? src_stride : dst_stride, dst,
-      dst_stride, col, row, plane);
+  if (predict) {
+    vp9_predict_intra_block(
+        xd, bwl, tx_size, mode, (x->skip_encode || x->fp_src_pred) ? src : dst,
+        (x->skip_encode || x->fp_src_pred) ? src_stride : dst_stride, dst,
+        dst_stride, col, row, plane);
+  }
+  if (!code_residual) return tx_type;
 
   // skip block condition should be handled before this is called.
   assert(!x->skip_block);
@@ -1041,7 +1046,7 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
         break;
     }
     if (*eob) *(args->skip) = 0;
-    return;
+    return tx_type;
   }
 #endif  // CONFIG_VP9_HIGHBITDEPTH
 
@@ -1111,6 +1116,28 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
       break;
   }
   if (*eob) *(args->skip) = 0;
+  return tx_type;
+}
+
+void vp9_encode_block_intra(int plane, int block, int row, int col,
+                            BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                            void *arg) {
+  encode_block_intra(plane, block, row, col, plane_bsize, tx_size, arg,
+                     /*predict=*/1, /*code_residual=*/1);
+}
+
+TX_TYPE vp9_encode_block_intra_pred(int plane, int block, int row, int col,
+                                    BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                    struct encode_b_args *args) {
+  return encode_block_intra(plane, block, row, col, plane_bsize, tx_size, args,
+                            /*predict=*/1, /*code_residual=*/0);
+}
+
+void vp9_encode_block_intra_residual(int plane, int block, int row, int col,
+                                     BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                     struct encode_b_args *args) {
+  encode_block_intra(plane, block, row, col, plane_bsize, tx_size, args,
+                     /*predict=*/0, /*code_residual=*/1);
 }
 
 void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane,

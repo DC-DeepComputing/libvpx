@@ -208,6 +208,9 @@ struct macroblock {
   DECLARE_ALIGNED(16, uint8_t, est_pred[64 * 64]);
 
   struct scale_factors *me_sf;
+  // The transform block RD cache of the current superblock row, or NULL if
+  // the frame does not use it (see block_rd_txfm()).
+  struct TX_RD_CACHE *tx_rd_cache;
 };
 
 #ifdef __cplusplus

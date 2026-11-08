@@ -16,6 +16,7 @@
 
 #include "vpx_dsp/vpx_dsp_common.h"
 #include "vpx_mem/vpx_mem.h"
+#include "vpx_ports/compiler_attributes.h"
 #include "vpx_ports/mem.h"
 #include "vpx_ports/system_state.h"
 
@@ -65,6 +66,50 @@ typedef struct {
   MV_REFERENCE_FRAME ref_frame[2];
 } REF_DEFINITION;
 
+// The RD search evaluates many transform blocks again with the same inputs:
+// nested partitions and repeated candidates (shared motion vectors, intra modes
+// with unchanged neighbors) predict the same pixels at the same position. The
+// transform block RD cache keeps the outcome of block_rd_txfm() for the blocks
+// of the current superblock row in a direct-mapped table. A ring buffer keeps
+// the prediction of each entry, to verify hits pixel for pixel, followed by the
+// reconstruction of intra blocks with nonzero coefficients, to replay it.
+#define TX_RD_CACHE_LOG2_ENTRIES 13
+#define TX_RD_CACHE_RING_SIZE (1 << 19)
+// The data of an entry is contiguous, so the prediction and reconstruction of
+// a 32x32 block may extend past the end of the ring buffer.
+#define TX_RD_CACHE_RING_SLACK (2 * 32 * 32)
+
+// Set to 1 to check each cache hit (with assertions enabled) against the
+// evaluation it replaces.
+#ifndef TX_RD_CACHE_VERIFY
+#define TX_RD_CACHE_VERIFY 0
+#endif
+
+typedef struct {
+  int64_t dist, sse;
+  uint64_t pos;  // Of the data of the entry in the ring buffer.
+  int rate;
+  uint16_t eob;
+} TX_RD_ENTRY;
+
+typedef struct TX_RD_CACHE {
+  uint64_t key[1 << TX_RD_CACHE_LOG2_ENTRIES];  // 0 for empty entries.
+  TX_RD_ENTRY entry[1 << TX_RD_CACHE_LOG2_ENTRIES];
+  uint64_t pos;  // Bytes written to the ring buffer in the superblock row.
+  DECLARE_ALIGNED(16, uint8_t,
+                  ring[TX_RD_CACHE_RING_SIZE + TX_RD_CACHE_RING_SLACK]);
+} TX_RD_CACHE;
+
+// A lookup of a transform block in the cache.
+typedef struct {
+  uint64_t key;
+  int index;     // Of the entry for key.
+  uint64_t pos;  // Of the data of the transform block in the ring buffer.
+#if TX_RD_CACHE_VERIFY
+  int hit;  // The lookup reported a miss to verify the entry.
+#endif
+} TX_RD_PROBE;
+
 struct rdcost_block_args {
   const VP9_COMP *cpi;
   MACROBLOCK *x;
@@ -80,6 +125,8 @@ struct rdcost_block_args {
   const ScanOrder *so;
   uint8_t skippable;
   struct buf_2d *this_recon;
+  TX_RD_CACHE *tx_rd_cache;  // NULL if the cache is not used.
+  uint64_t tx_rd_seed;
 };
 
 #define LAST_NEW_MV_INDEX 6
@@ -690,15 +737,166 @@ static void dist_block(const VP9_COMP *cpi, MACROBLOCK *x, int plane,
   }
 }
 
+void vp9_alloc_tx_rd_cache(VP9_COMP *cpi, ThreadData *td) {
+  // No initialization: vp9_reset_tx_rd_cache() empties the entries, and the
+  // ring buffer is only read through entries.
+  if (cpi->sf.use_tx_rd_cache && td->tx_rd_cache == NULL) {
+    CHECK_MEM_ERROR(&cpi->common.error, td->tx_rd_cache,
+                    vpx_memalign(16, sizeof(*td->tx_rd_cache)));
+  }
+}
+
+void vp9_free_tx_rd_cache(ThreadData *td) {
+  vpx_free(td->tx_rd_cache);
+  td->tx_rd_cache = NULL;
+}
+
+void vp9_reset_tx_rd_cache(const VP9_COMP *cpi, ThreadData *td) {
+  TX_RD_CACHE *const c = cpi->sf.use_tx_rd_cache ? td->tx_rd_cache : NULL;
+  assert(!cpi->sf.use_tx_rd_cache || c != NULL);
+  td->mb.tx_rd_cache = c;  // td->mb may be a copy of cpi->td.mb.
+  // A transform block belongs to a single superblock row, so emptying the cache
+  // loses no hits, and keeps its contents independent of which threads encoded
+  // which superblock rows before.
+  if (c != NULL) {
+    memset(c->key, 0, sizeof(c->key));
+    c->pos = 0;
+  }
+}
+
+// One round of xxHash64.
+static VPX_NO_UNSIGNED_OVERFLOW_CHECK VPX_NO_UNSIGNED_SHIFT_CHECK uint64_t
+tx_rd_round(uint64_t h, uint64_t v) {
+  h += v * 0xC2B2AE3D27D4EB4FULL;
+  return ((h << 31) | (h >> 33)) * 0x9E3779B185EBCA87ULL;
+}
+
+// Looks up the transform block at (blk_row, blk_col) predicted at dst, where
+// ctx combines its entropy context and transform type. A hit needs the same
+// key and a bit-identical prediction.
+static int tx_rd_probe(const struct rdcost_block_args *args, int plane,
+                       int blk_row, int blk_col, TX_SIZE tx_size, int ctx,
+                       const uint8_t *dst, int dst_stride, TX_RD_PROBE *probe) {
+  const TX_RD_CACHE *const c = args->tx_rd_cache;
+  const MACROBLOCKD *const xd = &args->x->e_mbd;
+  // The position of the transform block in 4x4 units of the plane.
+  const uint64_t row =
+      (-xd->mb_to_top_edge >> (5 + xd->plane[plane].subsampling_y)) + blk_row;
+  const uint64_t col =
+      (-xd->mb_to_left_edge >> (5 + xd->plane[plane].subsampling_x)) + blk_col;
+  const int w = 4 << tx_size;
+  uint32_t a, b;  // Corners of the prediction, to spread it over the cache.
+  const TX_RD_ENTRY *e;
+  int hit;
+  memcpy(&a, dst, 4);
+  memcpy(&b, dst + (w - 1) * dst_stride + w - 4, 4);
+  probe->key =
+      tx_rd_round(tx_rd_round(args->tx_rd_seed, row << 40 | col << 16 | ctx),
+                  a | (uint64_t)b << 32) |
+      1;  // Never the key of an empty entry.
+  probe->index = (int)(probe->key >> (64 - TX_RD_CACHE_LOG2_ENTRIES));
+  e = &c->entry[probe->index];
+  // The copies in the ring buffer are 16-byte aligned, as the source of some
+  // SAD implementations must be.
+  hit = c->key[probe->index] == probe->key &&
+        c->pos - e->pos <= TX_RD_CACHE_RING_SIZE &&
+        !args->cpi->fn_ptr[txsize_to_bsize[tx_size]].sdf(
+            &c->ring[e->pos % TX_RD_CACHE_RING_SIZE], w, dst, dst_stride);
+#if TX_RD_CACHE_VERIFY
+  probe->hit = hit;
+  return 0;
+#else
+  return hit;
+#endif
+}
+
+// Copies the prediction of the transform block at dst to the ring buffer.
+static void tx_rd_save_prediction(TX_RD_CACHE *c, TX_RD_PROBE *probe,
+                                  TX_SIZE tx_size, const uint8_t *dst,
+                                  int dst_stride) {
+  const int w = 4 << tx_size;
+#if TX_RD_CACHE_VERIFY
+  if (probe->hit) return;
+#endif
+  probe->pos = c->pos;
+  vpx_convolve_copy(dst, dst_stride,
+                    &c->ring[probe->pos % TX_RD_CACHE_RING_SIZE], w, NULL, 0, 0,
+                    0, 0, w, w);
+  c->pos += w * w;
+}
+
+// Adds the outcome of the evaluation of the transform block of probe to the
+// cache. dst holds the prediction of inter blocks, and the reconstruction of
+// intra blocks, whose prediction tx_rd_save_prediction() saved beforehand.
+static void tx_rd_insert(TX_RD_CACHE *c, TX_RD_PROBE *probe, TX_SIZE tx_size,
+                         int is_inter, const uint8_t *dst, int dst_stride,
+                         int64_t dist, int64_t sse, int rate, int eob) {
+  const int w = 4 << tx_size;
+  TX_RD_ENTRY *const e = &c->entry[probe->index];
+#if TX_RD_CACHE_VERIFY
+  if (probe->hit) {
+    // Without coefficients, the reconstruction is the prediction.
+    const uint8_t *const cached =
+        &c->ring[e->pos % TX_RD_CACHE_RING_SIZE + (e->eob ? w * w : 0)];
+    int r;
+    assert(e->dist == dist && e->sse == sse && e->rate == rate &&
+           e->eob == eob);
+    for (r = 0; r < w && !is_inter; ++r) {
+      assert(!memcmp(&cached[r * w], &dst[r * dst_stride], w));
+    }
+    (void)cached;
+    return;
+  }
+#endif
+  if (is_inter) {
+    // Saved only now, so that blocks whose evaluation ends early take no space.
+    tx_rd_save_prediction(c, probe, tx_size, dst, dst_stride);
+  } else if (eob) {
+    // No other transform block wrote to the ring buffer since the prediction.
+    assert(c->pos == probe->pos + w * w);
+    vpx_convolve_copy(dst, dst_stride,
+                      &c->ring[probe->pos % TX_RD_CACHE_RING_SIZE + w * w], w,
+                      NULL, 0, 0, 0, 0, w, w);
+    c->pos += w * w;
+  }
+  c->key[probe->index] = probe->key;
+  e->dist = dist;
+  e->sse = sse;
+  e->pos = probe->pos;
+  e->rate = rate;
+  e->eob = eob;
+}
+
+// Replaces the prediction at dst with the reconstruction of the cached intra
+// transform block.
+static void tx_rd_replay_reconstruction(const TX_RD_CACHE *c,
+                                        const TX_RD_ENTRY *e, TX_SIZE tx_size,
+                                        uint8_t *dst, int dst_stride) {
+  const int w = 4 << tx_size;
+  if (e->eob) {
+    vpx_convolve_copy(&c->ring[e->pos % TX_RD_CACHE_RING_SIZE + w * w], w, dst,
+                      dst_stride, NULL, 0, 0, 0, 0, w, w);
+  }
+}
+
+static void tx_rd_replay(const TX_RD_ENTRY *e, uint16_t *eob, int64_t *dist,
+                         int64_t *sse) {
+  *eob = e->eob;
+  *dist = e->dist;
+  *sse = e->sse;
+}
+
 static int rate_block(int plane, int block, TX_SIZE tx_size, int coeff_ctx,
                       struct rdcost_block_args *args) {
   return cost_coeffs(args->x, plane, block, tx_size, coeff_ctx, args->so->scan,
                      args->so->neighbors, args->use_fast_coef_costing);
 }
 
-static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
-                          BLOCK_SIZE plane_bsize, TX_SIZE tx_size, void *arg) {
-  struct rdcost_block_args *args = arg;
+// With a constant use_cache, compiles to block_rd_txfm() with or without the
+// transform block RD cache, so that the cache costs nothing when unused.
+static VPX_FORCE_INLINE void block_rd_txfm_impl(
+    int plane, int block, int blk_row, int blk_col, BLOCK_SIZE plane_bsize,
+    TX_SIZE tx_size, struct rdcost_block_args *args, int use_cache) {
   MACROBLOCK *const x = args->x;
   MACROBLOCKD *const xd = &x->e_mbd;
   MODE_INFO *const mi = xd->mi[0];
@@ -713,10 +911,14 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
   const BLOCK_SIZE tx_bsize = txsize_to_bsize[tx_size];
   const struct macroblockd_plane *const pd = &xd->plane[plane];
   const int dst_stride = pd->dst.stride;
-  const uint8_t *dst = &pd->dst.buf[4 * (blk_row * dst_stride + blk_col)];
+  uint8_t *const dst = &pd->dst.buf[4 * (blk_row * dst_stride + blk_col)];
   const int enable_trellis_opt = args->cpi->sf.trellis_opt_tx_rd.method;
   const double trellis_opt_thresh = args->cpi->sf.trellis_opt_tx_rd.thresh;
   int sse_calc_done = 0;
+  TX_RD_CACHE *const c = use_cache ? args->tx_rd_cache : NULL;
+  TX_RD_PROBE probe;
+  int probed = 0;
+  const TX_RD_ENTRY *hit = NULL;
 #if CONFIG_MISMATCH_DEBUG
   struct encode_b_args encode_b_arg = {
     x,
@@ -747,14 +949,33 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
   if (args->exit_early) return;
 
   if (!is_inter_block(mi)) {
-    vp9_encode_block_intra(plane, block, blk_row, blk_col, plane_bsize, tx_size,
-                           &encode_b_arg);
+    if (!use_cache) {
+      vp9_encode_block_intra(plane, block, blk_row, blk_col, plane_bsize,
+                             tx_size, &encode_b_arg);
+    } else {
+      const TX_TYPE tx_type = vp9_encode_block_intra_pred(
+          plane, block, blk_row, blk_col, plane_bsize, tx_size, &encode_b_arg);
+      probed = 1;
+      if (tx_rd_probe(args, plane, blk_row, blk_col, tx_size,
+                      coeff_ctx | tx_type << 2, dst, dst_stride, &probe)) {
+        hit = &c->entry[probe.index];
+        tx_rd_replay_reconstruction(c, hit, tx_size, dst, dst_stride);
+        if (hit->eob) mi->skip = 0;
+      } else {
+        // Coding the residual replaces the prediction with the reconstruction.
+        tx_rd_save_prediction(c, &probe, tx_size, dst, dst_stride);
+        vp9_encode_block_intra_residual(plane, block, blk_row, blk_col,
+                                        plane_bsize, tx_size, &encode_b_arg);
+      }
+    }
     if (recon) {
       uint8_t *rec_ptr = &recon->buf[4 * (blk_row * recon->stride + blk_col)];
       copy_block_visible(xd, pd, dst, dst_stride, rec_ptr, recon->stride,
                          blk_row, blk_col, plane_bsize, tx_bsize);
     }
-    if (x->block_tx_domain) {
+    if (hit != NULL) {
+      tx_rd_replay(hit, &x->plane[plane].eobs[block], &dist, &sse);
+    } else if (x->block_tx_domain) {
       dist_block(args->cpi, x, plane, plane_bsize, block, blk_row, blk_col,
                  tx_size, &dist, &sse, /*out_recon=*/NULL, sse_calc_done);
     } else {
@@ -792,8 +1013,17 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
       skip_txfm_flag = SKIP_TXFM_NONE;
     }
 
-    if (skip_txfm_flag == SKIP_TXFM_NONE ||
-        (recon && skip_txfm_flag == SKIP_TXFM_AC_ONLY)) {
+    if (use_cache && skip_txfm_flag == SKIP_TXFM_NONE) {
+      probed = 1;
+      if (tx_rd_probe(args, plane, blk_row, blk_col, tx_size, coeff_ctx, dst,
+                      dst_stride, &probe)) {
+        hit = &c->entry[probe.index];
+      }
+    }
+    if (hit != NULL) {
+      tx_rd_replay(hit, &x->plane[plane].eobs[block], &dist, &sse);
+    } else if (skip_txfm_flag == SKIP_TXFM_NONE ||
+               (recon && skip_txfm_flag == SKIP_TXFM_AC_ONLY)) {
       const struct macroblock_plane *const p = &x->plane[plane];
       const int diff_stride = 4 * num_4x4_blocks_wide_lookup[plane_bsize];
       const int16_t *const diff =
@@ -842,9 +1072,17 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
     assert(trellis_rate == rate_block(plane, block, tx_size, coeff_ctx, args));
   }
 #endif
-  rate = (trellis_rate >= 0 && !args->use_fast_coef_costing)
-             ? trellis_rate
-             : rate_block(plane, block, tx_size, coeff_ctx, args);
+  if (hit != NULL) {
+    rate = hit->rate;
+  } else {
+    rate = (trellis_rate >= 0 && !args->use_fast_coef_costing)
+               ? trellis_rate
+               : rate_block(plane, block, tx_size, coeff_ctx, args);
+    if (probed) {
+      tx_rd_insert(c, &probe, tx_size, is_inter_block(mi), dst, dst_stride,
+                   dist, sse, rate, x->plane[plane].eobs[block]);
+    }
+  }
   args->t_above[blk_col] = (x->plane[plane].eobs[block] > 0) ? 1 : 0;
   args->t_left[blk_row] = (x->plane[plane].eobs[block] > 0) ? 1 : 0;
   rd1 = RDCOST(x->rdmult, x->rddiv, rate, dist);
@@ -872,6 +1110,19 @@ static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
   args->skippable &= !x->plane[plane].eobs[block];
 }
 
+static void block_rd_txfm(int plane, int block, int blk_row, int blk_col,
+                          BLOCK_SIZE plane_bsize, TX_SIZE tx_size, void *arg) {
+  block_rd_txfm_impl(plane, block, blk_row, blk_col, plane_bsize, tx_size, arg,
+                     /*use_cache=*/0);
+}
+
+static void block_rd_txfm_cached(int plane, int block, int blk_row, int blk_col,
+                                 BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                 void *arg) {
+  block_rd_txfm_impl(plane, block, blk_row, blk_col, plane_bsize, tx_size, arg,
+                     /*use_cache=*/1);
+}
+
 static void txfm_rd_in_plane(const VP9_COMP *cpi, MACROBLOCK *x, int *rate,
                              int64_t *distortion, int *skippable, int64_t *sse,
                              int64_t ref_best_rd, int plane, BLOCK_SIZE bsize,
@@ -893,9 +1144,34 @@ static void txfm_rd_in_plane(const VP9_COMP *cpi, MACROBLOCK *x, int *rate,
   vp9_get_entropy_contexts(bsize, tx_size, pd, args.t_above, args.t_left);
 
   args.so = get_scan(xd, tx_size, get_plane_type(plane), 0);
+  // Cache hits leave the coefficient buffers stale, so the cache needs the
+  // coefficients of the RD search to be unused afterwards (x->select_tx_size
+  // disables swap_block_ptr() and skip_recode), and an up-to-date residual
+  // (see super_block_uvrd()).
+  if (x->tx_rd_cache != NULL && x->select_tx_size && !x->skip_recode &&
+      recon == NULL && ref_best_rd >= 0) {
+    const MODE_INFO *const mi = xd->mi[0];
+    // Within a superblock row, these parameters, with the position, entropy
+    // context, transform type and prediction of a transform block, determine
+    // the outcome of block_rd_txfm().
+    const int params =
+        plane | tx_size << 2 | is_inter_block(mi) << 4 |
+        x->block_tx_domain << 5 | x->skip_encode << 6 |
+        x->use_lp32x32fdct << 7 | mi->segment_id << 8 |
+        (cpi->sf.trellis_opt_tx_rd.method == ENABLE_TRELLIS_OPT_TX_RD_SRC_VAR &&
+         trellis_opt_src_var(x, cpi->sf.trellis_opt_tx_rd.thresh))
+            << 11;
+    assert(!(xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH));
+    args.tx_rd_cache = x->tx_rd_cache;
+    args.tx_rd_seed = tx_rd_round((uint64_t)(uint32_t)x->rdmult << 32 |
+                                      (uint32_t)(uint16_t)pd->dequant[0] << 16 |
+                                      (uint16_t)pd->dequant[1],
+                                  params);
+  }
 
-  vp9_foreach_transformed_block_in_plane(xd, bsize, plane, block_rd_txfm,
-                                         &args);
+  vp9_foreach_transformed_block_in_plane(
+      xd, bsize, plane,
+      args.tx_rd_cache != NULL ? block_rd_txfm_cached : block_rd_txfm, &args);
   if (args.exit_early) {
     *rate = INT_MAX;
     *distortion = INT64_MAX;
