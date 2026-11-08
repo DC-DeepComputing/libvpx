@@ -5480,10 +5480,12 @@ void vp9_encode_sb_row(VP9_COMP *cpi, ThreadData *td, int tile_row,
   assert(cpi->sf.use_nonrd_pick_mode);
   encode_nonrd_sb_row(cpi, td, this_tile, mi_row, &tok);
 #else
+  vp9_reset_tx_rd_cache(cpi, td);
   if (cpi->sf.use_nonrd_pick_mode)
     encode_nonrd_sb_row(cpi, td, this_tile, mi_row, &tok);
   else
     encode_rd_sb_row(cpi, td, this_tile, mi_row, &tok);
+  td->mb.tx_rd_cache = NULL;
 #endif
 
   cpi->tplist[tile_row][tile_col][tile_sb_row].stop = tok;
@@ -5728,6 +5730,8 @@ static void encode_frame_internal(VP9_COMP *cpi) {
 
   // Frame segmentation
   if (cpi->oxcf.aq_mode == PERCEPTUAL_AQ) build_kmeans_segmentation(cpi);
+
+  vp9_alloc_tx_rd_cache(cpi, td);
 
   {
 #if CONFIG_INTERNAL_STATS

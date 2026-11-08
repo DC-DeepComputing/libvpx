@@ -30,6 +30,7 @@
 #include "vp9/encoder/vp9_encodemb.h"
 #include "vp9/encoder/vp9_encoder.h"
 #include "vp9/encoder/vp9_rd.h"
+#include "vp9/encoder/vp9_rdopt.h"
 #include "vp9/encoder/vp9_tokenize.h"
 
 #if defined(NDEBUG)
@@ -842,6 +843,7 @@ void vp9_encode_sb(MACROBLOCK *x, BLOCK_SIZE bsize, int mi_row, int mi_col,
                                NULL,       // left entropy context
                                &mi->skip,  // skip
                                NULL,       // rate
+                               NULL,       // tx_rd_args
                                mi_row,    mi_col, output_enabled };
 #else
   struct encode_b_args arg = { x,
@@ -852,7 +854,8 @@ void vp9_encode_sb(MACROBLOCK *x, BLOCK_SIZE bsize, int mi_row, int mi_col,
                                NULL,       // above entropy context
                                NULL,       // left entropy context
                                &mi->skip,  // skip
-                               NULL };     // rate
+                               NULL,       // rate
+                               NULL };     // tx_rd_args
   (void)mi_row;
   (void)mi_col;
   (void)output_enabled;
@@ -936,6 +939,11 @@ void vp9_encode_block_intra(int plane, int block, int row, int col,
 
   if (!x->skip_recode) {
     const int tx_size_in_pixels = (1 << tx_size) << 2;
+    if (args->tx_rd_args != NULL &&
+        vp9_tx_rd_cache_intra(args, plane, row, col, tx_size, tx_type, dst,
+                              dst_stride)) {
+      return;
+    }
 #if CONFIG_VP9_HIGHBITDEPTH
     if (xd->cur_buf->flags & YV12_FLAG_HIGHBITDEPTH) {
       vpx_highbd_subtract_block(tx_size_in_pixels, tx_size_in_pixels, src_diff,
@@ -1129,6 +1137,7 @@ void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane,
     ctx.tl[plane],
     &xd->mi[0]->skip,
     NULL,  // rate
+    NULL,  // tx_rd_args
     0,     // mi_row
     0,     // mi_col
     0      // output_enabled
@@ -1142,7 +1151,8 @@ void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane,
                                ctx.ta[plane],
                                ctx.tl[plane],
                                &xd->mi[0]->skip,
-                               NULL };  // rate
+                               NULL,    // rate
+                               NULL };  // tx_rd_args
 #endif
 
   if (enable_trellis_opt && x->optimize &&

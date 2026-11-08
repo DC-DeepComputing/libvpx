@@ -24,6 +24,8 @@ struct TileInfo;
 struct VP9_COMP;
 struct macroblock;
 struct RD_COST;
+struct ThreadData;
+struct encode_b_args;
 
 void vp9_rd_pick_intra_mode_sb(struct VP9_COMP *cpi, struct macroblock *x,
                                struct RD_COST *rd_cost, BLOCK_SIZE bsize,
@@ -46,6 +48,46 @@ int vp9_internal_image_edge(struct VP9_COMP *cpi);
 int vp9_active_h_edge(struct VP9_COMP *cpi, int mi_row, int mi_step);
 int vp9_active_v_edge(struct VP9_COMP *cpi, int mi_col, int mi_step);
 int vp9_active_edge_sb(struct VP9_COMP *cpi, int mi_row, int mi_col);
+
+#if !CONFIG_REALTIME_ONLY
+// Allocates the transform block RD cache of td if the current frame uses it.
+// Must be called from the main thread.
+void vp9_alloc_tx_rd_cache(struct VP9_COMP *cpi, struct ThreadData *td);
+// Called at the start of each superblock row: if the current frame uses the
+// transform block RD cache, empties the cache of td and points td->mb at it.
+void vp9_reset_tx_rd_cache(const struct VP9_COMP *cpi, struct ThreadData *td);
+// Probes the transform block RD cache for the intra block predicted at dst. On
+// a hit, replays its reconstruction and returns 1; on a miss, saves its
+// prediction and returns 0.
+int vp9_tx_rd_cache_intra(struct encode_b_args *args, int plane, int row,
+                          int col, TX_SIZE tx_size, TX_TYPE tx_type,
+                          uint8_t *dst, int dst_stride);
+#else
+static INLINE void vp9_alloc_tx_rd_cache(struct VP9_COMP *cpi,
+                                         struct ThreadData *td) {
+  (void)cpi;
+  (void)td;
+}
+static INLINE void vp9_reset_tx_rd_cache(const struct VP9_COMP *cpi,
+                                         struct ThreadData *td) {
+  (void)cpi;
+  (void)td;
+}
+static INLINE int vp9_tx_rd_cache_intra(struct encode_b_args *args, int plane,
+                                        int row, int col, TX_SIZE tx_size,
+                                        TX_TYPE tx_type, uint8_t *dst,
+                                        int dst_stride) {
+  (void)args;
+  (void)plane;
+  (void)row;
+  (void)col;
+  (void)tx_size;
+  (void)tx_type;
+  (void)dst;
+  (void)dst_stride;
+  return 0;
+}
+#endif
 
 #if !CONFIG_REALTIME_ONLY
 void vp9_rd_pick_inter_mode_sub8x8(struct VP9_COMP *cpi,
