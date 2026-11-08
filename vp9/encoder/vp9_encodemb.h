@@ -60,6 +60,17 @@ void vp9_subtract_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane);
 void vp9_encode_block_intra(int plane, int block, int row, int col,
                             BLOCK_SIZE plane_bsize, TX_SIZE tx_size, void *arg);
 
+// The two steps of vp9_encode_block_intra(): vp9_encode_block_intra_pred()
+// writes the prediction of the transform block to the destination buffer and
+// returns its transform type, and vp9_encode_block_intra_residual() codes its
+// residual and adds it to the prediction.
+TX_TYPE vp9_encode_block_intra_pred(int plane, int block, int row, int col,
+                                    BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                    struct encode_b_args *args);
+void vp9_encode_block_intra_residual(int plane, int block, int row, int col,
+                                     BLOCK_SIZE plane_bsize, TX_SIZE tx_size,
+                                     struct encode_b_args *args);
+
 void vp9_encode_intra_block_plane(MACROBLOCK *x, BLOCK_SIZE bsize, int plane,
                                   int enable_trellis_opt);
 
