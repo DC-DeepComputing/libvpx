@@ -278,6 +278,9 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
     for (tl = cfg->ts_number_layers - 2; tl > 0; --tl)
       if (cfg->ts_rate_decimator[tl - 1] != 2 * cfg->ts_rate_decimator[tl])
         ERROR("ts_rate_decimator factors are not powers of 2");
+    for (tl = 1; tl < cfg->ts_number_layers; ++tl)
+      if (cfg->ts_rate_decimator[tl - 1] <= cfg->ts_rate_decimator[tl])
+        ERROR("ts_rate_decimator entries are not strictly decreasing");
   }
 
   // VP9 does not support a lower bound on the keyframe interval in
