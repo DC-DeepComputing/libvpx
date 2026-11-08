@@ -1061,6 +1061,16 @@ void vp9_set_speed_features_framesize_independent(VP9_COMP *cpi, int speed) {
     sf->optimize_coefficients = 0;
   }
 
+  // The cache only pays for itself when the full RD search of the transform
+  // size evaluates transform blocks many times over. It keeps 8-bit pixels,
+  // and needs the source pixels to stay unchanged within a frame, which the
+  // temporal denoiser of the non-RD mode does not ensure.
+  sf->use_tx_rd_cache =
+      !sf->use_nonrd_pick_mode && sf->tx_size_search_method == USE_FULL_RD;
+#if CONFIG_VP9_HIGHBITDEPTH
+  if (cpi->common.use_highbitdepth) sf->use_tx_rd_cache = 0;
+#endif
+
   if (sf->mv.subpel_force_stop == FULL_PEL) {
     // Whole pel only
     cpi->find_fractional_mv_step = vp9_skip_sub_pixel_tree;

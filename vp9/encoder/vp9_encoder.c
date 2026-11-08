@@ -81,6 +81,7 @@
 #include "vp9/encoder/vp9_quantize.h"
 #include "vp9/encoder/vp9_ratectrl.h"
 #include "vp9/encoder/vp9_rd.h"
+#include "vp9/encoder/vp9_rdopt.h"
 #include "vp9/encoder/vp9_resize.h"
 #include "vp9/encoder/vp9_segmentation.h"
 #include "vp9/encoder/vp9_skin_detection.h"
@@ -1057,6 +1058,7 @@ static void dealloc_compressor_data(VP9_COMP *cpi) {
   cpi->tplist[0][0] = NULL;
 
   vp9_free_pc_tree(&cpi->td);
+  vp9_free_tx_rd_cache(&cpi->td);
 
   for (i = 0; i < MAX_LAG_BUFFERS; ++i) {
     vpx_free_frame_buffer(&cpi->svc.scaled_frames[i]);
