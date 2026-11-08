@@ -240,6 +240,10 @@ static vpx_codec_err_t validate_config(vpx_codec_alg_priv_t *ctx,
       if (cfg->ts_rate_decimator[i - 1] != 2 * cfg->ts_rate_decimator[i])
         ERROR("ts_rate_decimator factors are not powers of 2");
     }
+    for (i = 1; i < cfg->ts_number_layers; ++i) {
+      if (cfg->ts_rate_decimator[i - 1] <= cfg->ts_rate_decimator[i])
+        ERROR("ts_rate_decimator entries are not strictly decreasing");
+    }
 
     for (i = 0; i < cfg->ts_periodicity; ++i) {
       RANGE_CHECK_HI(cfg, ts_layer_id[i], cfg->ts_number_layers - 1);

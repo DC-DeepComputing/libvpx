@@ -378,6 +378,49 @@ TEST(EncodeAPI, HighBitDepthCapability) {
 #endif
 }
 
+// The frame rate of each temporal layer is the frame rate divided by
+// ts_rate_decimator, so the decimators must strictly decrease.
+TEST(EncodeAPI, TsRateDecimatorValidation) {
+  static const struct {
+    unsigned int layers;
+    unsigned int decimator[VPX_TS_MAX_LAYERS];
+    bool valid;
+  } kTests[] = {
+    { 2, { 2, 1 }, true },     { 3, { 4, 2, 1 }, true },
+    { 2, { 3, 1 }, true },     { 3, { 6, 3, 1 }, true },
+    { 3, { 2, 1, 1 }, false }, { 2, { 1, 1 }, false },
+    { 2, { 0, 1 }, false },    { 4, { 4, 2, 1, 1 }, false },
+  };
+  for (const auto *iface : kCodecIfaces) {
+    for (const auto &test : kTests) {
+      SCOPED_TRACE(::testing::Message()
+                   << vpx_codec_iface_name(iface) << " layers " << test.layers
+                   << " decimators " << test.decimator[0] << " "
+                   << test.decimator[1] << " " << test.decimator[2] << " "
+                   << test.decimator[3]);
+      vpx_codec_enc_cfg_t cfg;
+      ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+      cfg.g_w = 64;
+      cfg.g_h = 64;
+      cfg.g_lag_in_frames = 0;
+      cfg.rc_end_usage = VPX_CBR;
+      cfg.ts_number_layers = test.layers;
+      cfg.ts_periodicity = test.layers;
+      for (unsigned int i = 0; i < test.layers; ++i) {
+        cfg.ts_rate_decimator[i] = test.decimator[i];
+        cfg.ts_target_bitrate[i] = 100 * (i + 1);
+        cfg.layer_target_bitrate[i] = 100 * (i + 1);
+        cfg.ts_layer_id[i] = i;
+      }
+      cfg.rc_target_bitrate = 100 * test.layers;
+      vpx_codec_ctx_t enc;
+      EXPECT_EQ(vpx_codec_enc_init(&enc, iface, &cfg, 0),
+                test.valid ? VPX_CODEC_OK : VPX_CODEC_INVALID_PARAM);
+      if (test.valid) EXPECT_EQ(vpx_codec_destroy(&enc), VPX_CODEC_OK);
+    }
+  }
+}
+
 #if CONFIG_VP8_ENCODER
 TEST(EncodeAPI, ImageSizeSetting) {
   const int width = 711;
