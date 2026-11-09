@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "74d599b0_b0b7d13c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1126910
+      },
+      "writtenOn": "2026-11-09T18:15:43Z",
+      "side": 1,
+      "message": "is there a bugID for this change?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 8
+      },
+      "revId": "df10e114ab563257d1b7857557360ebd8cc7e602",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
