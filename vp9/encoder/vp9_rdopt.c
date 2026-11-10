@@ -1461,7 +1461,7 @@ static int super_block_uvrd(const VP9_COMP *cpi, MACROBLOCK *x, int *rate,
   *sse = 0;
   *skippable = 1;
 
-  for (plane = 1; plane < MAX_MB_PLANE; ++plane) {
+  for (plane = 1; plane < MAX_MB_PLANE && is_cost_valid; ++plane) {
     txfm_rd_in_plane(cpi, x, &pnrate, &pndist, &pnskip, &pnsse, ref_best_rd,
                      plane, bsize, uv_tx_size, cpi->sf.use_fast_coef_costing,
                      /*recon=*/NULL);
