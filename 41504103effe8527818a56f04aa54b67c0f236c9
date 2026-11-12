@@ -33,6 +33,24 @@
       "message": "Probably more upgrade failures here.",
       "revId": "41504103effe8527818a56f04aa54b67c0f236c9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cd9ded00_739ffa24",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1002219
+      },
+      "writtenOn": "2026-11-12T16:58:09Z",
+      "side": 1,
+      "message": "\u003e Probably more upgrade failures here.\n\nActually this might be due to an old branch given the clang-format warnings. I\u0027m not sure why this is on something from 6 months ago.",
+      "parentUuid": "7ca124fb_df119e5e",
+      "revId": "41504103effe8527818a56f04aa54b67c0f236c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
