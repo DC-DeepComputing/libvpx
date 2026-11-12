@@ -17,6 +17,24 @@
       "isAi": true,
       "revId": "ec06e36b6119cf2c5bdaeba5632fa2df01cc942d",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f884bfee_7bcf9139",
+        "filename": "vp9/encoder/vp9_rdopt.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 5298385
+      },
+      "writtenOn": "2026-11-12T23:32:32Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "a287fe51_d9d7c85d",
+      "revId": "ec06e36b6119cf2c5bdaeba5632fa2df01cc942d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
