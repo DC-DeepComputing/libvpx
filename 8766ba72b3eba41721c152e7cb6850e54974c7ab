@@ -17,6 +17,25 @@
       "isAi": true,
       "revId": "8766ba72b3eba41721c152e7cb6850e54974c7ab",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "9a5ef145_1427e862",
+        "filename": "vp9/encoder/vp9_rdopt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1454,
+      "author": {
+        "id": 5298385
+      },
+      "writtenOn": "2026-11-12T23:29:31Z",
+      "side": 1,
+      "message": "Done. Folded `if (is_inter_block(mi)) vp9_subtract_plane(x, bsize, plane);` into the plane loop so plane 2\u0027s `vp9_subtract_plane()` is skipped when plane 1 exits early.",
+      "parentUuid": "0d2ac5ca_ca99f325",
+      "isAi": true,
+      "revId": "8766ba72b3eba41721c152e7cb6850e54974c7ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
