@@ -1,0 +1,22 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0d2ac5ca_ca99f325",
+        "filename": "vp9/encoder/vp9_rdopt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1454,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-11-12T20:03:10Z",
+      "side": 1,
+      "message": "Nit (optional, or follow-up): Since we\u0027re touching this block, consider folding `if (is_inter_block(mi)) vp9_subtract_plane(x, bsize, plane);` directly into the `for (plane \u003d 1; plane \u003c MAX_MB_PLANE; ++plane)` loop below. That removes the extra loop and also skips `vp9_subtract_plane()` on plane 2 whenever plane 1 exits early (`pnrate \u003d\u003d INT_MAX`).",
+      "isAi": true,
+      "revId": "8766ba72b3eba41721c152e7cb6850e54974c7ab",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
