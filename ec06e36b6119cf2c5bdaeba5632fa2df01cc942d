@@ -1,0 +1,22 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a287fe51_d9d7c85d",
+        "filename": "vp9/encoder/vp9_rdopt.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1171444
+      },
+      "writtenOn": "2026-11-12T18:56:36Z",
+      "side": 1,
+      "message": "Nit: Consider changing `int eob` to `uint16_t eob` to match `tx_rd_check_dist()` / `TX_RD_ENTRY::eob` and avoid implicit `int` -\u003e `uint16_t` narrowing warnings under `-Wconversion` or MSVC `/W4` (`C4244`).",
+      "isAi": true,
+      "revId": "ec06e36b6119cf2c5bdaeba5632fa2df01cc942d",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    }
+  ]
+}
