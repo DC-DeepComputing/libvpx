@@ -51,6 +51,24 @@
       "parentUuid": "7ca124fb_df119e5e",
       "revId": "41504103effe8527818a56f04aa54b67c0f236c9",
       "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "f1dbb47a_8f5e44b8",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 4343189
+      },
+      "writtenOn": "2026-11-12T19:35:46Z",
+      "side": 1,
+      "message": "Rebased onto origin/main in PS6 — thanks for catching that!",
+      "parentUuid": "cd9ded00_739ffa24",
+      "revId": "41504103effe8527818a56f04aa54b67c0f236c9",
+      "serverId": "3ce6091f-6c88-37e8-8c75-72f92ae8dfba"
     }
   ]
 }
