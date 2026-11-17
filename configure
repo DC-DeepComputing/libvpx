@@ -128,6 +128,7 @@ all_platforms="${all_platforms} armv7s-darwin-gcc"
 all_platforms="${all_platforms} armv8-linux-gcc"
 all_platforms="${all_platforms} loongarch32-linux-gcc"
 all_platforms="${all_platforms} loongarch64-linux-gcc"
+all_platforms="${all_platforms} riscv64-linux-gcc"
 all_platforms="${all_platforms} mips32-linux-gcc"
 all_platforms="${all_platforms} mips64-linux-gcc"
 all_platforms="${all_platforms} ppc64le-linux-gcc"
@@ -261,6 +262,7 @@ ARCH_LIST="
     x86_64
     ppc
     loongarch
+    riscv
 "
 
 ARCH_EXT_LIST_AARCH64="
@@ -289,6 +291,10 @@ ARCH_EXT_LIST_LOONGSON="
     lasx
 "
 
+ARCH_EXT_LIST_RISCV="
+    rvv
+"
+
 ARCH_EXT_LIST="
     neon_asm
     ${ARCH_EXT_LIST_AARCH64}
@@ -304,6 +310,8 @@ ARCH_EXT_LIST="
     vsx
 
     ${ARCH_EXT_LIST_LOONGSON}
+
+    ${ARCH_EXT_LIST_RISCV}
 "
 HAVE_LIST="
     ${ARCH_EXT_LIST}

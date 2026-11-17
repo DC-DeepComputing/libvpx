@@ -824,6 +824,9 @@ process_common_toolchain() {
       loongarch64*)
         tgt_isa=loongarch64
         ;;
+      riscv64*)
+        tgt_isa=riscv64
+        ;;
     esac
 
     # detect tgt_os
@@ -900,6 +903,10 @@ process_common_toolchain() {
       soft_enable lsx
       soft_enable lasx
       enable_feature loongarch
+      ;;
+    riscv64)
+      enable_feature riscv
+      soft_enable rvv
       ;;
   esac
 
@@ -1546,6 +1553,14 @@ EOF
       enabled lsx && soft_enable runtime_cpu_detect
       enabled lasx && check_inline_asm lasx '"xvadd.b $xr0, $xr1, $xr1"'
       enabled lasx && soft_enable runtime_cpu_detect
+      ;;
+    riscv*)
+      link_with_cc=gcc
+      setup_gnu_toolchain
+
+      enabled rvv && check_add_cflags -march=rv64gcv || disable_feature rvv
+      enabled rvv && check_inline_asm rvv '"vsetvli t0, a0, e8, m1, ta, ma"'
+      enabled rvv && soft_enable runtime_cpu_detect
       ;;
     *-gcc|generic-gnu)
       link_with_cc=gcc

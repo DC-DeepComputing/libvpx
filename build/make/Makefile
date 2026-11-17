@@ -163,6 +163,10 @@ $(BUILD_PFX)%_msa.c.o: CFLAGS += -mmsa
 
 # LOONGARCH
 $(BUILD_PFX)%_lsx.c.d:  CFLAGS += -mlsx
+# riscv rvv: fixed-size vector types need zvl semantics
+$(BUILD_PFX)%_idct32x32_1024_rvv.c.d: CFLAGS += -march=rv64gcv_zvl256b -mrvv-vector-bits=zvl
+$(BUILD_PFX)%_idct32x32_1024_rvv.c.o: CFLAGS += -march=rv64gcv_zvl256b -mrvv-vector-bits=zvl
+
 $(BUILD_PFX)%_lsx.c.o:  CFLAGS += -mlsx
 $(BUILD_PFX)%_lasx.c.d: CFLAGS += -mlasx
 $(BUILD_PFX)%_lasx.c.o: CFLAGS += -mlasx

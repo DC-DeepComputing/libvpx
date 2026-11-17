@@ -394,13 +394,13 @@ add_proto qw/void vpx_convolve_avg/, "const uint8_t *src, ptrdiff_t src_stride, 
 specialize qw/vpx_convolve_avg neon dspr2 msa vsx mmi lsx/, "$sse2_asm";
 
 add_proto qw/void vpx_convolve8/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
-specialize qw/vpx_convolve8 neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
+specialize qw/vpx_convolve8 neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx rvv/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
 
 add_proto qw/void vpx_convolve8_horiz/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
-specialize qw/vpx_convolve8_horiz neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
+specialize qw/vpx_convolve8_horiz neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx rvv/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
 
 add_proto qw/void vpx_convolve8_vert/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
-specialize qw/vpx_convolve8_vert neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
+specialize qw/vpx_convolve8_vert neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx rvv/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
 
 add_proto qw/void vpx_convolve8_avg/, "const uint8_t *src, ptrdiff_t src_stride, uint8_t *dst, ptrdiff_t dst_stride, const InterpKernel *filter, int x0_q4, int x_step_q4, int y0_q4, int y_step_q4, int w, int h";
 specialize qw/vpx_convolve8_avg neon neon_dotprod neon_i8mm dspr2 msa vsx mmi lsx/, "$sse2_asm", "$ssse3_asm", "$avx2_asm";
@@ -483,16 +483,16 @@ add_proto qw/void vpx_lpf_horizontal_16_dual/, "uint8_t *s, int pitch, const uin
 specialize qw/vpx_lpf_horizontal_16_dual sse2 avx2 neon dspr2 msa lsx/;
 
 add_proto qw/void vpx_lpf_horizontal_8/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/vpx_lpf_horizontal_8 sse2 neon dspr2 msa lsx/;
+specialize qw/vpx_lpf_horizontal_8 sse2 neon dspr2 msa lsx rvv/;
 
 add_proto qw/void vpx_lpf_horizontal_8_dual/, "uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1";
-specialize qw/vpx_lpf_horizontal_8_dual sse2 neon dspr2 msa lsx/;
+specialize qw/vpx_lpf_horizontal_8_dual sse2 neon dspr2 msa lsx rvv/;
 
 add_proto qw/void vpx_lpf_horizontal_4/, "uint8_t *s, int pitch, const uint8_t *blimit, const uint8_t *limit, const uint8_t *thresh";
-specialize qw/vpx_lpf_horizontal_4 sse2 neon dspr2 msa lsx/;
+specialize qw/vpx_lpf_horizontal_4 sse2 neon dspr2 msa lsx rvv/;
 
 add_proto qw/void vpx_lpf_horizontal_4_dual/, "uint8_t *s, int pitch, const uint8_t *blimit0, const uint8_t *limit0, const uint8_t *thresh0, const uint8_t *blimit1, const uint8_t *limit1, const uint8_t *thresh1";
-specialize qw/vpx_lpf_horizontal_4_dual sse2 neon dspr2 msa lsx/;
+specialize qw/vpx_lpf_horizontal_4_dual sse2 neon dspr2 msa lsx rvv/;
 } #CONFIG_VP9
 
 if (vpx_config("CONFIG_VP9_HIGHBITDEPTH") eq "yes") {
@@ -657,7 +657,7 @@ if (vpx_config("CONFIG_EMULATE_HARDWARE") ne "yes") {
   specialize qw/vpx_idct16x16_38_add neon sse2/;
   specialize qw/vpx_idct16x16_10_add neon sse2/;
   specialize qw/vpx_idct16x16_1_add neon sse2/;
-  specialize qw/vpx_idct32x32_1024_add neon sse2 avx2 vsx/;
+  specialize qw/vpx_idct32x32_1024_add neon sse2 avx2 vsx rvv/;
   specialize qw/vpx_idct32x32_135_add neon sse2 ssse3 avx2/;
   specialize qw/vpx_idct32x32_34_add neon sse2 ssse3/;
   specialize qw/vpx_idct32x32_1_add neon sse2/;

@@ -191,6 +191,12 @@ DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve8_lsx.c
 DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve8_avg_lsx.c
 DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_avg_lsx.c
 DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_copy_lsx.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve_copy_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve8_horiz_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve8_vert_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve8_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_lpf_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/vpx_idct32x32_1024_rvv.c
 DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_lsx.h
 
 # loop filters
