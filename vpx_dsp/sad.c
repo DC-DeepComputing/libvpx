@@ -32,12 +32,35 @@ static INLINE unsigned int sad(const uint8_t *src_ptr, int src_stride,
   return sad;
 }
 
+/* RVV SAD dispatch (compile-time, A/B only differs by HAVE_RVV_ENC).
+   Square blocks 8/16/32/64 use RVV kernels; other sizes and avg/4d stay C. */
+#if HAVE_RVV_ENC
+#include "./riscv/sad_rvv.h"
+static INLINE unsigned int sad_dispatch(const uint8_t *src_ptr, int src_stride,
+                                        const uint8_t *ref_ptr, int ref_stride,
+                                        int width, int height) {
+  if (width == height) {
+    switch (width) {
+      case 8:  return vpx_sad8x8_rvv(src_ptr, src_stride, ref_ptr, ref_stride);
+      case 16: return vpx_sad16x16_rvv(src_ptr, src_stride, ref_ptr, ref_stride);
+      case 32: return vpx_sad32x32_rvv(src_ptr, src_stride, ref_ptr, ref_stride);
+      case 64: return vpx_sad64x64_rvv(src_ptr, src_stride, ref_ptr, ref_stride);
+      default: break;
+    }
+  }
+  return sad(src_ptr, src_stride, ref_ptr, ref_stride, width, height);
+}
+#define SAD_DISPATCH sad_dispatch
+#else
+#define SAD_DISPATCH sad
+#endif
+
 #if CONFIG_ENCODERS
 
 #define sadMxN(m, n)                                                          \
   unsigned int vpx_sad##m##x##n##_c(const uint8_t *src_ptr, int src_stride,   \
                                     const uint8_t *ref_ptr, int ref_stride) { \
-    return sad(src_ptr, src_stride, ref_ptr, ref_stride, m, n);               \
+    return SAD_DISPATCH(src_ptr, src_stride, ref_ptr, ref_stride, m, n);               \
   }                                                                           \
   unsigned int vpx_sad##m##x##n##_avg_c(                                      \
       const uint8_t *src_ptr, int src_stride, const uint8_t *ref_ptr,         \
@@ -76,7 +99,7 @@ static INLINE unsigned int sad(const uint8_t *src_ptr, int src_stride,
 #define sadMxN(m, n)                                                          \
   unsigned int vpx_sad##m##x##n##_c(const uint8_t *src_ptr, int src_stride,   \
                                     const uint8_t *ref_ptr, int ref_stride) { \
-    return sad(src_ptr, src_stride, ref_ptr, ref_stride, m, n);               \
+    return SAD_DISPATCH(src_ptr, src_stride, ref_ptr, ref_stride, m, n);               \
   }
 
 #define sadMxNx4D(m, n)

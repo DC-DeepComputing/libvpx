@@ -20,6 +20,11 @@
 
 #include "vpx_dsp/variance.h"
 
+/* RVV variance dispatch (compile-time, A/B differs only by HAVE_RVV_ENC). */
+#if HAVE_RVV_ENC
+#include "riscv/variance_rvv.h"
+#endif
+
 static const uint8_t bilinear_filters[8][2] = {
   { 128, 0 }, { 112, 16 }, { 96, 32 }, { 80, 48 },
   { 64, 64 }, { 48, 80 },  { 32, 96 }, { 16, 112 },
@@ -57,6 +62,13 @@ static void variance(const uint8_t *src_ptr, int src_stride,
                      const uint8_t *ref_ptr, int ref_stride, int w, int h,
                      uint32_t *sse, int *sum) {
   int i, j;
+
+#if HAVE_RVV_ENC
+  if (vpx_variance_rvv_applicable(w, h)) {
+    vpx_variance_rvv(src_ptr, src_stride, ref_ptr, ref_stride, w, h, sse, sum);
+    return;
+  }
+#endif
 
   *sum = 0;
   *sse = 0;

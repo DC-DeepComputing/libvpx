@@ -197,6 +197,8 @@ DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve8_vert_rvv.c
 DSP_SRCS-$(HAVE_RVV) += riscv/vpx_convolve8_rvv.c
 DSP_SRCS-$(HAVE_RVV) += riscv/vpx_lpf_rvv.c
 DSP_SRCS-$(HAVE_RVV) += riscv/vpx_idct32x32_1024_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/sad_rvv.c
+DSP_SRCS-$(HAVE_RVV) += riscv/variance_rvv.c
 DSP_SRCS-$(HAVE_LSX) += loongarch/vpx_convolve_lsx.h
 
 # loop filters

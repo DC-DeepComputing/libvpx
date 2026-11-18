@@ -907,6 +907,7 @@ process_common_toolchain() {
     riscv64)
       enable_feature riscv
       soft_enable rvv
+      soft_enable rvv_enc
       ;;
   esac
 
